@@ -6,19 +6,14 @@ export interface AdminLoginRequest {
   password: string
 }
 
+/** AdminTokenResponse */
 export interface AdminTokenResponse {
   accessToken: string
   refreshToken: string
   role: AdminRole
 }
 
-export interface AdminMe {
-  id: string
-  email: string
-  name: string
-  role: AdminRole
-}
-
+/** AdminAccountResponse — GET /me 와 GET /accounts 항목이 같은 형태 */
 export interface AdminAccount {
   id: string
   email: string
@@ -29,9 +24,17 @@ export interface AdminAccount {
   createdAt: string
 }
 
+export type AdminMe = AdminAccount
+
+/** 비밀번호는 10자 이상 */
 export interface AdminAccountCreateRequest {
   email: string
+  password: string
   name: string
   role: AdminRole
-  password: string
+}
+
+export interface AdminPasswordChangeRequest {
+  currentPassword: string
+  newPassword: string
 }

@@ -111,7 +111,7 @@
 
 ### 로그인 화면
 - 이메일 · 비밀번호 · 로그인 버튼. 자동완성 `username` / `current-password`.
-- 소셜 로그인·비밀번호 찾기·비밀번호 변경 **없음**. 관리자는 SUPER가 생성하고, 비밀번호를 바꿔야 하면 계정을 비활성화하고 새로 만든다.
+- 소셜 로그인·비밀번호 찾기 **없음**. 관리자는 SUPER가 생성. 본인 비밀번호 변경은 사이드바 하단 "비밀번호 변경" 모달(`PATCH /me/password`, 현재 비밀번호 + 새 비밀번호 10자 이상).
 
 | API | 사용 |
 |---|---|
@@ -129,15 +129,17 @@
 
 ### 관리자 계정 화면 (SUPER 전용, `meta.superOnly`)
 - 테이블: 이메일 · 이름 · 역할(배지) · 상태(활성/비활성) · 마지막 로그인 · 생성일 · 액션.
-- 액션: 활성화 ↔ 비활성화 토글. **본인 계정 행은 액션 없음**(스스로 비활성화 방지).
-- "계정 추가" 모달: 이메일 · 이름 · 역할(SUPER/OPERATOR) · 초기 비밀번호. 생성 후 목록 재조회.
-- 비밀번호 변경·삭제 UI는 없음(비활성화 + 재생성으로 갈음).
+- 액션: 역할 전환(SUPER ↔ OPERATOR) · 활성화 ↔ 비활성화 토글. **본인 계정 행은 액션 없음**(스스로 강등·비활성화 방지, 서버도 거부).
+- "계정 추가" 모달: 이메일 · 이름 · 역할(SUPER/OPERATOR) · 초기 비밀번호(10자 이상). 생성 후 목록 재조회.
+- 타인 비밀번호 초기화·계정 삭제 UI는 없음(비활성화 + 재생성으로 갈음).
 
 | API | 사용 |
 |---|---|
 | `GET /accounts` → `[{ id, email, name, role, status, lastLoginAt, createdAt }]` | 목록 |
-| `POST /accounts` `{ email, name, role, password }` → 201 | 추가 |
+| `POST /accounts` `{ email, password, name, role }` → 201 `{ id }` | 추가 |
 | `PATCH /accounts/{id}/status` `{ status: ACTIVE\|DISABLED }` → 204 | 토글 |
+| `PATCH /accounts/{id}/role` `{ role }` → 204 | 역할 전환 |
+| `PATCH /me/password` `{ currentPassword, newPassword }` → 204 | 본인 비밀번호 |
 
 에러 분기: `DUPLICATE_ADMIN_EMAIL` 409 → detail 토스트, 모달 유지.
 
@@ -229,12 +231,12 @@
 - 카테고리 카드: 접기/펼치기, 이름, 노출 배지, 항목 수, 액션(위·아래 · 항목 추가 · 수정 · 삭제).
 - 항목 행: 질문(한 줄 말줄임) · 숨김 배지 · 답변 2줄 미리보기 · 액션(위·아래 · 수정 · 삭제).
 - **순서 변경**: 드래그 대신 ▲▼. 한 칸 이동할 때마다 전체 ID 배열을 `order` API로 보내고 재조회(백엔드가 `sort_order = index`로 교체). 첫/마지막은 버튼 disabled.
-- 카테고리 모달: 이름(≤50) · 노출. 항목 모달(넓게): 카테고리 select(이동 가능) · 질문(≤200) · 답변(≤5,000) · 노출.
+- 카테고리 모달: 이름(≤50) · 노출. 항목 모달(넓게): 카테고리 select(이동 가능) · 질문(≤200) · 답변(≤10,000) · 노출.
 - 모든 변경 후 `GET /faqs` 전체 재조회(데이터 작음).
 
 | API | 사용 |
 |---|---|
-| `GET /faqs` → `[{ id, name, visible, sortOrder, faqs: [{ id, categoryId, question, answer, visible, sortOrder }] }]` | 전체 |
+| `GET /faqs` → `[{ id, name, sortOrder, visible, items: [{ id, question, answer, sortOrder, visible }] }]` | 전체 |
 | `POST /faq-categories` · `PUT /faq-categories/{id}` · `DELETE /faq-categories/{id}` | 카테고리 |
 | `PUT /faq-categories/order` `{ ids }` | 카테고리 순서 |
 | `POST /faqs` · `PUT /faqs/{id}` · `DELETE /faqs/{id}` | 항목 |
@@ -253,7 +255,7 @@
 
 ### 목록
 - 필터: 약관 유형(`TERMS_OF_SERVICE|PRIVACY_POLICY`, 백엔드 `PolicyType`. 가입 필수 약관과 1:1이라 종류 추가는 백엔드 `AgreementType`과 같이 결정).
-- 컬럼: 약관 · 버전(mono) · 시행일 · 상태(**시행 중** 초록 / **시행 예정** 노랑) · 등록일 · 액션.
+- 컬럼: 약관 · 버전(mono) · 시행일 · 상태(**시행 중** 초록 / **시행 예정** 노랑) · 액션.
 - 상태는 프론트에서 `effectiveAt > 오늘` 로 계산(서버 시각과 하루 차이 날 수 있음 → 최종 판정은 서버 409).
 - 삭제 버튼은 **시행 예정만** 노출.
 
@@ -264,7 +266,7 @@
 
 | API | 사용 |
 |---|---|
-| `GET /policies?type=` (미래 시행분 포함, `effectiveAt DESC`) | 목록 |
+| `GET /policies?type=` → `[{ id, type, version, effectiveAt }]` (미래 시행분 포함, `effectiveAt DESC`) | 목록 |
 | `GET /policies/{id}` · `POST /policies` · `PUT /policies/{id}` · `DELETE /policies/{id}` | 폼·삭제 |
 
 에러 분기:
@@ -279,22 +281,23 @@
 ## 8. 1:1 문의 (ADW-06-01 / 06-02)
 
 ### 목록
-- 필터: 상태(`RECEIVED|ANSWERED`) · topic 텍스트(검색 버튼).
-- 컬럼: 상태(RECEIVED 빨강 · ANSWERED 초록) · 유형 · 제목 · 회원(닉네임 + 이메일 2줄, 탈퇴면 "탈퇴 회원") · 접수일 · 답변일.
+- 필터: 상태(`RECEIVED|ANSWERED`) · 유형(`InquiryTopic`: ACCOUNT · RECOMMENDATIONS · ROUTES · SPOT_INFORMATION · TECHNICAL_ISSUES · FEEDBACK_SUGGESTIONS · OTHER).
+- 컬럼: 상태(RECEIVED 빨강 · ANSWERED 초록) · 유형 · 제목(`subject`) · 회원(닉네임 + 이메일 2줄, `member.withdrawn`이면 "탈퇴 회원") · 접수일 · 답변일.
+- 대시보드 미답변 타일에서 `?status=RECEIVED`로 진입 가능.
 - 정렬은 서버(RECEIVED 우선 · createdAt DESC). 프론트 정렬 없음.
 
 ### 상세
-- 좌(2/3): 문의 본문 카드(topic · 접수일 · 내용 · 첨부 썸네일 → 새 탭) + 답변 카드.
-- 우(1/3): 회원 카드(닉네임 · 이메일, 탈퇴면 안내).
+- 좌(2/3): 문의 본문 카드(topic · 접수일 · 내용 · 첨부 — `contentType`이 image/* 면 썸네일, 아니면 파일 아이콘 → 새 탭) + 답변 카드.
+- 우(1/3): 회원 카드(닉네임 · 이메일 · 회원 상세 링크, 탈퇴면 안내).
 - 답변 카드: 기존 답변 있으면 textarea에 채우고 "답변 수정", 없으면 "답변 등록". 안내 문구 "다시 등록하면 덮어씁니다." 저장 후 상세 재조회.
 - 첨부 URL은 서명 URL(만료 5분) → 화면 진입 시점 기준. 만료 시 이미지 깨짐 → 새로고침 안내(후순위).
 
 | API | 사용 |
 |---|---|
 | `GET /inquiries?status=&topic=&cursor=&size=` | 목록 |
-| `GET /inquiries/{id}` → `{ …summary, content, attachmentUrls[], answer, answeredBy }` | 상세 |
-| `PUT /inquiries/{id}/answer` `{ content }` | 답변 |
-| `GET /inquiries/count?status=RECEIVED` → `{ count }` | 사이드바 배지(후순위) |
+| `GET /inquiries/{id}` → `{ id, topic, subject, content, status, createdAt, attachments: [{ url, contentType }], member: { id, nickname, email, withdrawn } \| null, answer: { content, answeredBy, answeredAt } \| null }` | 상세 |
+| `PUT /inquiries/{id}/answer` `{ content }` (≤5,000) | 답변 |
+| `GET /inquiries/count` → `{ count }` (RECEIVED 수) | 사이드바 배지(후순위) |
 
 ---
 
@@ -365,14 +368,14 @@ src/
 
 | 순서 | 화면 | 백엔드 | 프론트 상태 |
 |---|---|---|---|
-| 1 | 로그인 · 관리자 계정 (§2) | ADM-F01 | 구현됨 |
-| 2 | 공지 · FAQ · 약관 (§5~7) | ADM-F02 | 구현됨 |
-| 3 | 1:1 문의 (§8) | ADM-F03 | 구현됨 |
+| 1 | 로그인 · 관리자 계정 (§2) | ADM-F01 (PR #79 머지) | **API 대조 완료** |
+| 2 | 공지 · FAQ · 약관 (§5~7) | ADM-F01 에 포함 (PR #79) | **API 대조 완료** |
+| 3 | 1:1 문의 (§8) | SUP-F04 (PR #80 머지) | **API 대조 완료** |
 | 4 | 회원 관리 · 정지 (§4) | ADM-F04 | 구현됨 |
 | 5 | 대시보드 (§3) | ADM-F05 | 구현됨 |
 | 6 | 스팟 관리 (§9) | ADM-F06 (B) | 미구현 — API 확정 대기 |
 
-"구현됨"은 백엔드 API 없이 스펙 기준으로 작성된 상태. **각 ADM-F0x가 머지되면 응답 필드를 `src/types/`와 대조해 맞추는 작업이 한 번씩 필요**하다(특히 §4 회원 상세, §6 FAQ 트리, §8 첨부 URL).
+"구현됨"은 백엔드 API 없이 스펙 기준으로 작성된 상태. **각 백엔드 PR이 머지되면 응답 필드를 `src/types/`와 대조해 맞추는 작업이 한 번씩 필요**하다. 1~3은 2026-09-13 대조 완료, 남은 건 §4 회원 상세·§3 대시보드.
 
 ---
 
@@ -384,5 +387,5 @@ src/
 
 ### 결정된 항목
 - **호스팅**: `admin.moodi.kr` 별도 Firebase Hosting 사이트 (2026-09-13).
-- **관리자 비밀번호 변경**: API·화면 없음. 비활성화 + 재생성으로 갈음 (2026-09-13).
+- **관리자 비밀번호 변경**: 본인만 `PATCH /me/password` (ADM-F01 에 포함됨). 타인 초기화는 비활성화 + 재생성 (2026-09-13).
 - **enum**: 백엔드 실제 값으로 확정 — `NoticeType` 6종, `PolicyType` 2종, `OAuthProvider` GOOGLE·APPLE. `MemberStatus`의 SUSPENDED·WITHDRAWN은 ADM-F04에서 추가 (2026-09-13).

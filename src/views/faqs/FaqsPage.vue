@@ -4,7 +4,7 @@ import { toast } from 'vue-sonner'
 import { ChevronDown, ChevronUp, Pencil, Trash2, Plus } from 'lucide-vue-next'
 import { faqsApi } from '@/api/faqs.api'
 import { getErrorCode, getErrorMessage } from '@/utils/error'
-import type { Faq, FaqCategory, FaqCategoryRequest, FaqRequest } from '@/types/support'
+import type { FaqItem, FaqCategory, FaqCategoryRequest, FaqRequest } from '@/types/support'
 import PageHeader from '@/components/common/PageHeader.vue'
 import Card from '@/components/common/Card.vue'
 import Badge from '@/components/common/Badge.vue'
@@ -33,7 +33,7 @@ async function load() {
 }
 onMounted(load)
 
-async function run(action: () => Promise<void>, successMessage: string) {
+async function run(action: () => Promise<unknown>, successMessage: string) {
   try {
     await action()
     toast.success(successMessage)
@@ -63,8 +63,8 @@ function moveCategory(index: number, dir: -1 | 1) {
 }
 function moveFaq(category: FaqCategory, index: number, dir: -1 | 1) {
   const target = index + dir
-  if (target < 0 || target >= category.faqs.length) return
-  const ids = swap(category.faqs, index, target).map((f) => f.id)
+  if (target < 0 || target >= category.items.length) return
+  const ids = swap(category.items, index, target).map((f) => f.id)
   run(() => faqsApi.reorder(category.id, ids), '항목 순서를 변경했습니다.')
 }
 
@@ -93,10 +93,10 @@ const faqModal = reactive<{ open: boolean; id: number | null; form: FaqRequest }
   open: false, id: null, form: { categoryId: 0, question: '', answer: '', visible: true },
 })
 const faqSaving = ref(false)
-function openFaq(categoryId: number, faq?: Faq) {
+function openFaq(categoryId: number, faq?: FaqItem) {
   faqModal.id = faq?.id ?? null
   faqModal.form = {
-    categoryId: faq?.categoryId ?? categoryId,
+    categoryId,
     question: faq?.question ?? '',
     answer: faq?.answer ?? '',
     visible: faq?.visible ?? true,
@@ -114,7 +114,7 @@ async function submitFaq() {
 }
 
 // ── 삭제 ──
-const deleteTarget = ref<{ kind: 'category'; item: FaqCategory } | { kind: 'faq'; item: Faq } | null>(null)
+const deleteTarget = ref<{ kind: 'category'; item: FaqCategory } | { kind: 'faq'; item: FaqItem } | null>(null)
 const deleting = ref(false)
 async function confirmDelete() {
   const target = deleteTarget.value
@@ -149,7 +149,7 @@ const collapsed = reactive(new Set<number>())
         </button>
         <span class="font-semibold">{{ category.name }}</span>
         <Badge :tone="category.visible ? 'green' : 'gray'">{{ category.visible ? '노출' : '숨김' }}</Badge>
-        <span class="text-xs text-gray-400">{{ category.faqs.length }}개</span>
+        <span class="text-xs text-gray-400">{{ category.items.length }}개</span>
         <div class="ml-auto flex items-center gap-1">
           <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="ci === 0" @click="moveCategory(ci, -1)"><ChevronUp class="size-4" /></button>
           <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="ci === categories.length - 1" @click="moveCategory(ci, 1)"><ChevronDown class="size-4" /></button>
@@ -160,8 +160,8 @@ const collapsed = reactive(new Set<number>())
       </div>
 
       <ul v-if="!collapsed.has(category.id)" class="divide-y divide-gray-100 border-t border-gray-200">
-        <li v-if="category.faqs.length === 0" class="px-5 py-4 text-sm text-gray-400">항목이 없습니다.</li>
-        <li v-for="(faq, fi) in category.faqs" :key="faq.id" class="flex items-start gap-3 px-5 py-3">
+        <li v-if="category.items.length === 0" class="px-5 py-4 text-sm text-gray-400">항목이 없습니다.</li>
+        <li v-for="(faq, fi) in category.items" :key="faq.id" class="flex items-start gap-3 px-5 py-3">
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <span class="truncate text-sm font-medium">{{ faq.question }}</span>
@@ -171,7 +171,7 @@ const collapsed = reactive(new Set<number>())
           </div>
           <div class="flex shrink-0 items-center gap-1">
             <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="fi === 0" @click="moveFaq(category, fi, -1)"><ChevronUp class="size-4" /></button>
-            <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="fi === category.faqs.length - 1" @click="moveFaq(category, fi, 1)"><ChevronDown class="size-4" /></button>
+            <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="fi === category.items.length - 1" @click="moveFaq(category, fi, 1)"><ChevronDown class="size-4" /></button>
             <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100" @click="openFaq(category.id, faq)"><Pencil class="size-4" /></button>
             <button type="button" class="rounded p-1.5 text-red-500 hover:bg-red-50" @click="deleteTarget = { kind: 'faq', item: faq }"><Trash2 class="size-4" /></button>
           </div>
@@ -202,7 +202,7 @@ const collapsed = reactive(new Set<number>())
         <TextInput v-model="faqModal.form.question" required :maxlength="200" />
       </FormField>
       <FormField label="답변" required>
-        <TextArea v-model="faqModal.form.answer" required :rows="8" :maxlength="5000" />
+        <TextArea v-model="faqModal.form.answer" required :rows="8" :maxlength="10000" />
       </FormField>
       <Toggle v-model="faqModal.form.visible" label="앱에 노출" />
     </form>

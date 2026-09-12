@@ -7,15 +7,16 @@ export const inquiriesApi = {
     const { data } = await client.get<ApiResponse<CursorResponse<InquirySummary>>>('/inquiries', { params })
     return data.data
   },
-  async get(id: number) {
+  async get(id: string) {
     const { data } = await client.get<ApiResponse<InquiryDetail>>(`/inquiries/${id}`)
     return data.data
   },
-  async answer(id: number, content: string) {
+  /** 재호출 시 덮어쓰기. 5,000자 이내 */
+  async answer(id: string, content: string) {
     await client.put(`/inquiries/${id}/answer`, { content })
   },
   async countReceived() {
-    const { data } = await client.get<ApiResponse<{ count: number }>>('/inquiries/count', { params: { status: 'RECEIVED' } })
+    const { data } = await client.get<ApiResponse<{ count: number }>>('/inquiries/count')
     return data.data.count
   },
 }

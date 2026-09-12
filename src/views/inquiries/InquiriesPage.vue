@@ -1,32 +1,32 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { inquiriesApi } from '@/api/inquiries.api'
 import { useCursorList } from '@/composables/useCursorList'
 import { formatDateTime } from '@/utils/format'
-import { inquiryStatusLabel, toOptions } from '@/utils/labels'
-import type { InquiryStatus, InquirySummary } from '@/types/support'
+import { inquiryStatusLabel, inquiryTopicLabel, toOptions } from '@/utils/labels'
+import type { InquiryStatus, InquirySummary, InquiryTopic } from '@/types/support'
 import PageHeader from '@/components/common/PageHeader.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import Badge from '@/components/common/Badge.vue'
 import SelectField from '@/components/common/SelectField.vue'
-import TextInput from '@/components/common/TextInput.vue'
 import LoadMore from '@/components/common/LoadMore.vue'
 
+const route = useRoute()
 const router = useRouter()
-const status = ref<InquiryStatus | ''>('')
-const topic = ref('')
+const status = ref<InquiryStatus | ''>(route.query.status === 'RECEIVED' || route.query.status === 'ANSWERED' ? route.query.status : '')
+const topic = ref<InquiryTopic | ''>('')
 
 const list = useCursorList<InquirySummary>((cursor) =>
   inquiriesApi.list({ status: status.value || undefined, topic: topic.value || undefined, cursor, size: 20 }),
 )
 onMounted(list.reload)
-watch(status, list.reload)
+watch([status, topic], list.reload)
 
 const columns = [
   { key: 'status', label: '상태', class: 'w-24' },
   { key: 'topic', label: '유형', class: 'w-32' },
-  { key: 'title', label: '제목' },
+  { key: 'subject', label: '제목' },
   { key: 'member', label: '회원', class: 'w-56' },
   { key: 'createdAt', label: '접수일', class: 'w-40' },
   { key: 'answeredAt', label: '답변일', class: 'w-40' },
@@ -36,11 +36,10 @@ const columns = [
 <template>
   <PageHeader title="1:1 문의" description="MY-06 · 접수(RECEIVED) 문의가 먼저 정렬됩니다." />
 
-  <form class="mb-4 flex gap-2" @submit.prevent="list.reload">
+  <div class="mb-4 flex gap-2">
     <SelectField v-model="status" :options="toOptions(inquiryStatusLabel)" placeholder="전체 상태" />
-    <TextInput v-model="topic" placeholder="유형 (topic)" class="!w-48" />
-    <button type="submit" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50">검색</button>
-  </form>
+    <SelectField v-model="topic" :options="toOptions(inquiryTopicLabel)" placeholder="전체 유형" />
+  </div>
 
   <DataTable
     :columns="columns"
@@ -53,10 +52,11 @@ const columns = [
     <template #status="{ row }">
       <Badge :tone="row.status === 'RECEIVED' ? 'red' : 'green'">{{ inquiryStatusLabel[row.status] }}</Badge>
     </template>
+    <template #topic="{ row }">{{ inquiryTopicLabel[row.topic] }}</template>
     <template #member="{ row }">
-      <template v-if="row.memberNickname || row.memberEmail">
-        <div class="text-sm">{{ row.memberNickname ?? '-' }}</div>
-        <div class="text-xs text-gray-500">{{ row.memberEmail }}</div>
+      <template v-if="row.member && !row.member.withdrawn">
+        <div class="text-sm">{{ row.member.nickname ?? '-' }}</div>
+        <div class="text-xs text-gray-500">{{ row.member.email ?? '-' }}</div>
       </template>
       <span v-else class="text-xs text-gray-400">탈퇴 회원</span>
     </template>

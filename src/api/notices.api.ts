@@ -17,7 +17,8 @@ export const noticesApi = {
     return data.data
   },
   async create(body: NoticeRequest) {
-    await client.post('/notices', body)
+    const { data } = await client.post<ApiResponse<{ id: number }>>('/notices', body)
+    return data.data.id
   },
   async update(id: number, body: NoticeRequest) {
     await client.put(`/notices/${id}`, body)

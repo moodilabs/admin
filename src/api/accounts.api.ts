@@ -1,6 +1,6 @@
 import client from './client'
 import type { ApiResponse } from '@/types/api'
-import type { AdminAccount, AdminAccountCreateRequest, AdminAccountStatus } from '@/types/auth'
+import type { AdminAccount, AdminAccountCreateRequest, AdminAccountStatus, AdminRole } from '@/types/auth'
 
 export const accountsApi = {
   async list() {
@@ -8,9 +8,13 @@ export const accountsApi = {
     return data.data
   },
   async create(body: AdminAccountCreateRequest) {
-    await client.post('/accounts', body)
+    const { data } = await client.post<ApiResponse<{ id: string }>>('/accounts', body)
+    return data.data.id
   },
   async updateStatus(id: string, status: AdminAccountStatus) {
     await client.patch(`/accounts/${id}/status`, { status })
+  },
+  async updateRole(id: string, role: AdminRole) {
+    await client.patch(`/accounts/${id}/role`, { role })
   },
 }

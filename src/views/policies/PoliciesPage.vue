@@ -4,9 +4,9 @@ import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { policiesApi } from '@/api/policies.api'
 import { getErrorMessage } from '@/utils/error'
-import { formatDate, formatDateTime, isFutureDate } from '@/utils/format'
+import { formatDate, isFutureDate } from '@/utils/format'
 import { policyTypeLabel, toOptions } from '@/utils/labels'
-import type { Policy, PolicyType } from '@/types/support'
+import type { PolicySummary, PolicyType } from '@/types/support'
 import PageHeader from '@/components/common/PageHeader.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import Badge from '@/components/common/Badge.vue'
@@ -16,7 +16,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 
 const router = useRouter()
 const type = ref<PolicyType | ''>('')
-const policies = ref<Policy[]>([])
+const policies = ref<PolicySummary[]>([])
 const loading = ref(false)
 
 async function load() {
@@ -36,12 +36,11 @@ const columns = [
   { key: 'type', label: '약관', class: 'w-48' },
   { key: 'version', label: '버전', class: 'w-24' },
   { key: 'effectiveAt', label: '시행일', class: 'w-32' },
-  { key: 'state', label: '상태', class: 'w-24' },
-  { key: 'createdAt', label: '등록일' },
+  { key: 'state', label: '상태' },
   { key: 'actions', label: '', class: 'w-24 text-right' },
 ]
 
-const deleteTarget = ref<Policy | null>(null)
+const deleteTarget = ref<PolicySummary | null>(null)
 const deleting = ref(false)
 async function confirmDelete() {
   if (!deleteTarget.value) return
@@ -86,7 +85,6 @@ async function confirmDelete() {
         {{ isFutureDate(row.effectiveAt.slice(0, 10)) ? '시행 예정' : '시행 중' }}
       </Badge>
     </template>
-    <template #createdAt="{ row }">{{ formatDateTime(row.createdAt) }}</template>
     <template #actions="{ row }">
       <div class="flex justify-end" @click.stop>
         <BaseButton

@@ -1,4 +1,4 @@
-// ── 공지 ──
+// ── 공지 (AdminNoticeResponse) ──
 /** 백엔드 support.domain.NoticeType — 앱은 제목 앞에 [유형]으로 표시 */
 export type NoticeType = 'ANNOUNCEMENT' | 'MAINTENANCE' | 'UPDATE' | 'ISSUE' | 'EVENT' | 'OTHER'
 
@@ -8,9 +8,8 @@ export interface Notice {
   title: string
   content: string
   visible: boolean
+  /** YYYY-MM-DD */
   publishedAt: string
-  createdAt: string
-  updatedAt: string
 }
 
 export interface NoticeRequest {
@@ -18,25 +17,25 @@ export interface NoticeRequest {
   title: string
   content: string
   visible: boolean
+  /** YYYY-MM-DD, 미지정 시 오늘 */
   publishedAt?: string
 }
 
-// ── FAQ ──
-export interface Faq {
+// ── FAQ (AdminFaqCategoryResponse / AdminFaqItemResponse) ──
+export interface FaqItem {
   id: number
-  categoryId: number
   question: string
   answer: string
-  visible: boolean
   sortOrder: number
+  visible: boolean
 }
 
 export interface FaqCategory {
   id: number
   name: string
-  visible: boolean
   sortOrder: number
-  faqs: Faq[]
+  visible: boolean
+  items: FaqItem[]
 }
 
 export interface FaqCategoryRequest {
@@ -51,17 +50,20 @@ export interface FaqRequest {
   visible: boolean
 }
 
-// ── 약관 ──
+// ── 약관 (AdminPolicySummaryResponse / AdminPolicyDetailResponse) ──
 /** 백엔드 support.domain.PolicyType — 가입 필수 약관(AgreementType)과 1:1 */
 export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY'
 
-export interface Policy {
+export interface PolicySummary {
   id: number
   type: PolicyType
   version: string
-  content: string
+  /** YYYY-MM-DD */
   effectiveAt: string
-  createdAt: string
+}
+
+export interface PolicyDetail extends PolicySummary {
+  content: string
 }
 
 export interface PolicyRequest {
@@ -71,30 +73,56 @@ export interface PolicyRequest {
   effectiveAt: string
 }
 
-// ── 1:1 문의 ──
+// ── 1:1 문의 (AdminInquirySummaryResponse / AdminInquiryDetailResponse) ──
 export type InquiryStatus = 'RECEIVED' | 'ANSWERED'
+export type InquiryTopic =
+  | 'ACCOUNT' | 'RECOMMENDATIONS' | 'ROUTES' | 'SPOT_INFORMATION'
+  | 'TECHNICAL_ISSUES' | 'FEEDBACK_SUGGESTIONS' | 'OTHER'
 
-export interface InquirySummary {
-  id: number
-  topic: string
-  title: string
-  status: InquiryStatus
-  memberNickname: string | null
-  memberEmail: string | null
-  createdAt: string
-  answeredAt: string | null
+/** 탈퇴 회원은 withdrawn=true 에 nickname·email null. member 자체가 null 인 경우도 방어 */
+export interface InquiryMember {
+  id: string
+  nickname: string | null
+  email: string | null
+  withdrawn: boolean
 }
 
-export interface InquiryDetail extends InquirySummary {
+export interface InquirySummary {
+  id: string
+  topic: InquiryTopic
+  subject: string
+  status: InquiryStatus
+  createdAt: string
+  answeredAt: string | null
+  member: InquiryMember | null
+}
+
+export interface InquiryAttachment {
+  url: string
+  contentType: string
+}
+
+export interface InquiryAnswer {
   content: string
-  attachmentUrls: string[]
-  answer: string | null
-  answeredBy: string | null
+  answeredBy: string
+  answeredAt: string
+}
+
+export interface InquiryDetail {
+  id: string
+  topic: InquiryTopic
+  subject: string
+  content: string
+  status: InquiryStatus
+  createdAt: string
+  attachments: InquiryAttachment[]
+  member: InquiryMember | null
+  answer: InquiryAnswer | null
 }
 
 export interface InquiryListQuery {
   status?: InquiryStatus
-  topic?: string
+  topic?: InquiryTopic
   cursor?: string
   size?: number
 }

@@ -9,7 +9,8 @@ export const faqsApi = {
   },
   // 카테고리
   async createCategory(body: FaqCategoryRequest) {
-    await client.post('/faq-categories', body)
+    const { data } = await client.post<ApiResponse<{ id: number }>>('/faq-categories', body)
+    return data.data.id
   },
   async updateCategory(id: number, body: FaqCategoryRequest) {
     await client.put(`/faq-categories/${id}`, body)
@@ -22,7 +23,8 @@ export const faqsApi = {
   },
   // 항목
   async create(body: FaqRequest) {
-    await client.post('/faqs', body)
+    const { data } = await client.post<ApiResponse<{ id: number }>>('/faqs', body)
+    return data.data.id
   },
   async update(id: number, body: FaqRequest) {
     await client.put(`/faqs/${id}`, body)

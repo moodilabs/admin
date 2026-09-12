@@ -1,5 +1,5 @@
 import type { MemberStatus, Provider } from '@/types/member'
-import type { InquiryStatus, NoticeType, PolicyType } from '@/types/support'
+import type { InquiryStatus, InquiryTopic, NoticeType, PolicyType } from '@/types/support'
 import type { AdminRole } from '@/types/auth'
 
 export type Tone = 'gray' | 'green' | 'yellow' | 'red' | 'blue'
@@ -22,6 +22,16 @@ export const policyTypeLabel: Record<PolicyType, string> = {
 }
 
 export const inquiryStatusLabel: Record<InquiryStatus, string> = { RECEIVED: '접수', ANSWERED: '답변완료' }
+
+export const inquiryTopicLabel: Record<InquiryTopic, string> = {
+  ACCOUNT: '계정',
+  RECOMMENDATIONS: '추천',
+  ROUTES: '루트',
+  SPOT_INFORMATION: '스팟 정보',
+  TECHNICAL_ISSUES: '기술 문제',
+  FEEDBACK_SUGGESTIONS: '피드백·제안',
+  OTHER: '기타',
+}
 
 export const adminRoleLabel: Record<AdminRole, string> = { SUPER: '슈퍼', OPERATOR: '운영자' }
 

@@ -45,10 +45,10 @@ onMounted(load)
 // 생성
 const createOpen = ref(false)
 const creating = ref(false)
-const form = reactive<AdminAccountCreateRequest>({ email: '', name: '', role: 'OPERATOR', password: '' })
+const form = reactive<AdminAccountCreateRequest>({ email: '', password: '', name: '', role: 'OPERATOR' })
 
 function openCreate() {
-  Object.assign(form, { email: '', name: '', role: 'OPERATOR', password: '' })
+  Object.assign(form, { email: '', password: '', name: '', role: 'OPERATOR' })
   createOpen.value = true
 }
 
@@ -67,6 +67,17 @@ async function submitCreate() {
 }
 
 // 상태 변경
+async function changeRole(account: AdminAccount) {
+  const next = account.role === 'SUPER' ? 'OPERATOR' : 'SUPER'
+  try {
+    await accountsApi.updateRole(account.id, next)
+    toast.success(`역할을 ${adminRoleLabel[next]}(으)로 변경했습니다.`)
+    await load()
+  } catch (error) {
+    toast.error(getErrorMessage(error))
+  }
+}
+
 async function toggleStatus(account: AdminAccount) {
   const next = account.status === 'ACTIVE' ? 'DISABLED' : 'ACTIVE'
   try {
@@ -96,14 +107,14 @@ async function toggleStatus(account: AdminAccount) {
     <template #lastLoginAt="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
     <template #createdAt="{ row }">{{ formatDateTime(row.createdAt) }}</template>
     <template #actions="{ row }">
-      <BaseButton
-        v-if="row.id !== auth.me?.id"
-        variant="secondary"
-        class="!px-3 !py-1"
-        @click="toggleStatus(row)"
-      >
-        {{ row.status === 'ACTIVE' ? '비활성화' : '활성화' }}
-      </BaseButton>
+      <div v-if="row.id !== auth.me?.id" class="flex justify-end gap-1">
+        <BaseButton variant="secondary" class="!px-3 !py-1" @click="changeRole(row)">
+          {{ row.role === 'SUPER' ? '운영자로' : '슈퍼로' }}
+        </BaseButton>
+        <BaseButton variant="secondary" class="!px-3 !py-1" @click="toggleStatus(row)">
+          {{ row.status === 'ACTIVE' ? '비활성화' : '활성화' }}
+        </BaseButton>
+      </div>
     </template>
   </DataTable>
 
@@ -118,8 +129,8 @@ async function toggleStatus(account: AdminAccount) {
       <FormField label="역할" required>
         <SelectField v-model="form.role" :options="toOptions(adminRoleLabel)" class="w-full" />
       </FormField>
-      <FormField label="초기 비밀번호" required>
-        <TextInput v-model="form.password" type="password" required autocomplete="new-password" />
+      <FormField label="초기 비밀번호" required hint="10자 이상">
+        <TextInput v-model="form.password" type="password" required :minlength="10" autocomplete="new-password" />
       </FormField>
     </form>
     <template #footer>
