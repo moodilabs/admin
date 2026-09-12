@@ -20,3 +20,15 @@ export function formatDate(value: string | null | undefined): string {
 export function formatNumber(value: number): string {
   return value.toLocaleString('ko-KR')
 }
+
+/** YYYY-MM-DD (로컬) */
+export function toDateInput(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+export function isFutureDate(value: string): boolean {
+  return value > toDateInput()
+}
