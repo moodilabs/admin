@@ -2,7 +2,7 @@
 
 Moodi 관리자 웹. 백엔드 `/api/admin/**`(moodi-api)를 호출하는 SPA.
 
-기능 범위·API 스펙은 백엔드 레포 `docs/spec/admin.md` 가 정본이다.
+기능 범위·API 스펙은 백엔드 레포 `docs/spec/admin.md` 가 정본이고, 화면·라우트·연동 규칙은 [`docs/spec/admin-web.md`](./docs/spec/admin-web.md)에 정리한다.
 
 ## 스택
 
