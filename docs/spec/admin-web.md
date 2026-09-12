@@ -111,7 +111,7 @@
 
 ### 로그인 화면
 - 이메일 · 비밀번호 · 로그인 버튼. 자동완성 `username` / `current-password`.
-- 소셜 로그인·비밀번호 찾기 **없음**. 관리자는 SUPER가 생성. 본인 비밀번호 변경은 사이드바 하단 "비밀번호 변경" 모달(`PATCH /me/password`, 현재 비밀번호 + 새 비밀번호 10자 이상).
+- 소셜 로그인·비밀번호 찾기·비밀번호 변경 화면 **없음**. 관리자는 SUPER가 생성하고, 비밀번호를 바꿔야 하면 비활성화 후 새로 만든다. (백엔드 `PATCH /me/password`는 있으나 어드민 웹에서는 쓰지 않음)
 
 | API | 사용 |
 |---|---|
@@ -139,7 +139,6 @@
 | `POST /accounts` `{ email, password, name, role }` → 201 `{ id }` | 추가 |
 | `PATCH /accounts/{id}/status` `{ status: ACTIVE\|DISABLED }` → 204 | 토글 |
 | `PATCH /accounts/{id}/role` `{ role }` → 204 | 역할 전환 |
-| `PATCH /me/password` `{ currentPassword, newPassword }` → 204 | 본인 비밀번호 |
 
 에러 분기: `DUPLICATE_ADMIN_EMAIL` 409 → detail 토스트, 모달 유지.
 
@@ -387,5 +386,5 @@ src/
 
 ### 결정된 항목
 - **호스팅**: `admin.moodi.kr` 별도 Firebase Hosting 사이트 (2026-09-13).
-- **관리자 비밀번호 변경**: 본인만 `PATCH /me/password` (ADM-F01 에 포함됨). 타인 초기화는 비활성화 + 재생성 (2026-09-13).
+- **관리자 비밀번호 변경**: 어드민 웹에 화면 없음. 비활성화 + 재생성으로 갈음 (2026-09-13).
 - **enum**: 백엔드 실제 값으로 확정 — `NoticeType` 6종, `PolicyType` 2종, `OAuthProvider` GOOGLE·APPLE. `MemberStatus`의 SUSPENDED·WITHDRAWN은 ADM-F04에서 추가 (2026-09-13).

@@ -1,6 +1,6 @@
 import client from './client'
 import type { ApiResponse } from '@/types/api'
-import type { AdminLoginRequest, AdminMe, AdminPasswordChangeRequest, AdminTokenResponse } from '@/types/auth'
+import type { AdminLoginRequest, AdminMe, AdminTokenResponse } from '@/types/auth'
 
 export const authApi = {
   async login(body: AdminLoginRequest) {
@@ -13,8 +13,5 @@ export const authApi = {
   async me() {
     const { data } = await client.get<ApiResponse<AdminMe>>('/me')
     return data.data
-  },
-  async changePassword(body: AdminPasswordChangeRequest) {
-    await client.patch('/me/password', body)
   },
 }

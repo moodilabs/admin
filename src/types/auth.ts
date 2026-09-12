@@ -33,8 +33,3 @@ export interface AdminAccountCreateRequest {
   name: string
   role: AdminRole
 }
-
-export interface AdminPasswordChangeRequest {
-  currentPassword: string
-  newPassword: string
-}
