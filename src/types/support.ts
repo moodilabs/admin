@@ -1,5 +1,6 @@
 // ── 공지 ──
-export type NoticeType = 'NOTICE' | 'EVENT' | 'UPDATE'
+/** 백엔드 support.domain.NoticeType — 앱은 제목 앞에 [유형]으로 표시 */
+export type NoticeType = 'ANNOUNCEMENT' | 'MAINTENANCE' | 'UPDATE' | 'ISSUE' | 'EVENT' | 'OTHER'
 
 export interface Notice {
   id: number
@@ -51,7 +52,8 @@ export interface FaqRequest {
 }
 
 // ── 약관 ──
-export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY' | 'LOCATION' | 'MARKETING'
+/** 백엔드 support.domain.PolicyType — 가입 필수 약관(AgreementType)과 1:1 */
+export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY'
 
 export interface Policy {
   id: number

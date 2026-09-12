@@ -1,5 +1,6 @@
+/** SUSPENDED·WITHDRAWN 은 ADM-F04 에서 추가되는 값 (WITHDRAWN 은 deleted_at 기반 가상 상태) */
 export type MemberStatus = 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'WITHDRAWN'
-export type Provider = 'KAKAO' | 'APPLE' | 'GOOGLE'
+export type Provider = 'GOOGLE' | 'APPLE'
 
 export interface MemberSummary {
   id: string

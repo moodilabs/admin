@@ -8,7 +8,7 @@
 | 항목 | 결정 |
 |---|---|
 | 형태 | **SPA** (Vue 3 + Vite + TS + Tailwind 4 + Pinia + vue-router + axios). 별도 레포 `moodilabs/admin` |
-| 배포 | 정적 빌드(`dist/`)를 Firebase Hosting 별도 사이트에 올리고 `/api/**`를 Cloud Run `moodi-api`로 rewrite. 호스트는 `admin.moodi.kr` (확정 필요, §11) |
+| 배포 | 정적 빌드(`dist/`)를 Firebase Hosting 별도 사이트 **`admin.moodi.kr`** 에 올리고 `/api/**`를 Cloud Run `moodi-api`로 rewrite (§11) |
 | 인증 | 백엔드 관리자 JWT(`type=ADMIN_ACCESS`). 토큰은 `localStorage`. 401 시 `/auth/reissue` 1회 재시도 후 실패면 로그인으로 |
 | 권한 | `SUPER` / `OPERATOR`. 라우트 `meta.superOnly` + 버튼 단위 `auth.isSuper` 분기. 서버가 최종 판정(403 → 토스트) |
 | 페이징 | 백엔드 `CursorResponse` 그대로. **"더 보기" 버튼** 방식(무한 스크롤·오프셋 페이지 안 씀) |
@@ -111,7 +111,7 @@
 
 ### 로그인 화면
 - 이메일 · 비밀번호 · 로그인 버튼. 자동완성 `username` / `current-password`.
-- 소셜 로그인·비밀번호 찾기 **없음**(관리자는 SUPER가 API로 생성, 비밀번호 초기화는 §11 열린 질문).
+- 소셜 로그인·비밀번호 찾기·비밀번호 변경 **없음**. 관리자는 SUPER가 생성하고, 비밀번호를 바꿔야 하면 계정을 비활성화하고 새로 만든다.
 
 | API | 사용 |
 |---|---|
@@ -131,7 +131,7 @@
 - 테이블: 이메일 · 이름 · 역할(배지) · 상태(활성/비활성) · 마지막 로그인 · 생성일 · 액션.
 - 액션: 활성화 ↔ 비활성화 토글. **본인 계정 행은 액션 없음**(스스로 비활성화 방지).
 - "계정 추가" 모달: 이메일 · 이름 · 역할(SUPER/OPERATOR) · 초기 비밀번호. 생성 후 목록 재조회.
-- 비밀번호 변경·삭제 UI는 없음(백엔드 API 없음).
+- 비밀번호 변경·삭제 UI는 없음(비활성화 + 재생성으로 갈음).
 
 | API | 사용 |
 |---|---|
@@ -161,7 +161,7 @@
 ## 4. 회원 관리 (ADW-02-01 / 02-02)
 
 ### 목록
-- 필터: 키워드(닉네임·이메일 부분일치, 검색 버튼) · 상태(`PENDING|ACTIVE|SUSPENDED|WITHDRAWN`) · 가입 경로(`KAKAO|APPLE|GOOGLE`).
+- 필터: 키워드(닉네임·이메일 부분일치, 검색 버튼) · 상태(`PENDING|ACTIVE|SUSPENDED|WITHDRAWN`) · 가입 경로(`GOOGLE|APPLE`, 백엔드 `OAuthProvider`).
 - 컬럼: 닉네임 · 이메일 · 가입 경로 · 상태(배지: PENDING 노랑 · ACTIVE 초록 · SUSPENDED 빨강 · WITHDRAWN 회색) · 가입일.
 - `WITHDRAWN`은 `deleted_at IS NOT NULL` 가상 상태. 탈퇴 회원의 닉네임·이메일은 null → "-".
 
@@ -196,7 +196,8 @@
 ## 5. 공지 관리 (ADW-03-01 / 03-02)
 
 ### 목록
-- 필터: 유형(`NOTICE|EVENT|UPDATE` — 백엔드 `NoticeType` 확정값으로 교체) · 노출(전체/노출/숨김).
+- 필터: 유형(`ANNOUNCEMENT|MAINTENANCE|UPDATE|ISSUE|EVENT|OTHER`, 백엔드 `NoticeType`) · 노출(전체/노출/숨김).
+- 유형 라벨: 공지 · 점검 · 업데이트 · 장애 · 이벤트 · 기타. 등록 기본값 `ANNOUNCEMENT`.
 - 컬럼: 유형(배지) · 제목 · 노출(배지) · 게시일 · 액션(숨기기/노출 토글 · 삭제).
 - 노출 토글은 목록에서 바로(`PATCH .../visibility`), 재조회 없이 행 상태만 갱신.
 - 삭제는 하드 삭제 → danger 확인 "삭제된 공지는 복구할 수 없습니다."
@@ -251,7 +252,7 @@
 ## 7. 약관 관리 (ADW-05-01 / 05-02)
 
 ### 목록
-- 필터: 약관 유형(`TERMS_OF_SERVICE|PRIVACY_POLICY|LOCATION|MARKETING` — 백엔드 `PolicyType`으로 교체).
+- 필터: 약관 유형(`TERMS_OF_SERVICE|PRIVACY_POLICY`, 백엔드 `PolicyType`. 가입 필수 약관과 1:1이라 종류 추가는 백엔드 `AgreementType`과 같이 결정).
 - 컬럼: 약관 · 버전(mono) · 시행일 · 상태(**시행 중** 초록 / **시행 예정** 노랑) · 등록일 · 액션.
 - 상태는 프론트에서 `effectiveAt > 오늘` 로 계산(서버 시각과 하루 차이 날 수 있음 → 최종 판정은 서버 409).
 - 삭제 버튼은 **시행 예정만** 노출.
@@ -352,11 +353,11 @@ src/
 |---|---|---|
 | local | `http://localhost:8080` | `vite dev` 프록시 `/api` → 백엔드, 포트 5174 |
 | dev | `https://dev-api.moodi.kr` | |
-| prod | `https://moodi.kr` (또는 `admin.moodi.kr` rewrite) | |
+| prod | `https://admin.moodi.kr` | Firebase Hosting 별도 사이트, `/api/**` → Cloud Run rewrite (동일 오리진이라 CORS 불필요) |
 
 - 빌드: `npm run build` (vue-tsc 타입체크 포함). CI에서 이 명령이 게이트.
 - `index.html`에 `robots: noindex, nofollow`.
-- 백엔드 §16-3 "관리자 접근 제한(IP 허용 목록 / 별도 호스트)" 결정에 따라 호스팅 구성이 바뀜.
+- 호스트 분리로 백엔드 §16-3(관리자 접근 제한)은 `admin.moodi.kr` 사이트 단위로 IP 제한·Basic 인증을 걸 수 있는 여지를 남긴다.
 
 ---
 
@@ -377,9 +378,11 @@ src/
 
 ## 13. 열린 질문 (합의 필요)
 
-1. **호스팅** — `admin.moodi.kr` 별도 Firebase 사이트 vs `moodi.kr/admin` 경로. 백엔드 §16-3(IP 제한)과 같이 결정.
-2. **관리자 비밀번호 변경/초기화** — 백엔드 API 없음. SUPER가 계정을 비활성화하고 새로 만드는 것으로 갈지, `PATCH /accounts/{id}/password`를 추가할지.
-3. **enum 확정값** — `NoticeType`, `PolicyType`, `Provider`, `MemberStatus` 라벨 매핑(`utils/labels.ts`)은 백엔드 enum 기준으로 재확인.
-4. **공지·FAQ 답변 서식** — plain text 유지 vs 마크다운. 앱 렌더링 방식에 따름.
-5. **문의 첨부 서명 URL 만료(5분)** — 상세 화면에서 만료 시 재발급 API 필요 여부.
-6. **미답변 문의 배지** — 사이드바에 `GET /inquiries/count` 실시간 표시 여부(폴링 주기).
+1. **공지·FAQ 답변 서식** — plain text 유지 vs 마크다운. 앱 렌더링 방식에 따름.
+2. **문의 첨부 서명 URL 만료(5분)** — 상세 화면에서 만료 시 재발급 API 필요 여부.
+3. **미답변 문의 배지** — 사이드바에 `GET /inquiries/count` 실시간 표시 여부(폴링 주기).
+
+### 결정된 항목
+- **호스팅**: `admin.moodi.kr` 별도 Firebase Hosting 사이트 (2026-09-13).
+- **관리자 비밀번호 변경**: API·화면 없음. 비활성화 + 재생성으로 갈음 (2026-09-13).
+- **enum**: 백엔드 실제 값으로 확정 — `NoticeType` 6종, `PolicyType` 2종, `OAuthProvider` GOOGLE·APPLE. `MemberStatus`의 SUSPENDED·WITHDRAWN은 ADM-F04에서 추가 (2026-09-13).

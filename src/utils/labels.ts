@@ -10,15 +10,15 @@ export const memberStatusLabel: Record<MemberStatus, string> = {
 export const memberStatusTone: Record<MemberStatus, Tone> = {
   PENDING: 'yellow', ACTIVE: 'green', SUSPENDED: 'red', WITHDRAWN: 'gray',
 }
-export const providerLabel: Record<Provider, string> = { KAKAO: '카카오', APPLE: '애플', GOOGLE: '구글' }
+export const providerLabel: Record<Provider, string> = { GOOGLE: '구글', APPLE: '애플' }
 
-export const noticeTypeLabel: Record<NoticeType, string> = { NOTICE: '공지', EVENT: '이벤트', UPDATE: '업데이트' }
+export const noticeTypeLabel: Record<NoticeType, string> = {
+  ANNOUNCEMENT: '공지', MAINTENANCE: '점검', UPDATE: '업데이트', ISSUE: '장애', EVENT: '이벤트', OTHER: '기타',
+}
 
 export const policyTypeLabel: Record<PolicyType, string> = {
   TERMS_OF_SERVICE: '서비스 이용약관',
   PRIVACY_POLICY: '개인정보 처리방침',
-  LOCATION: '위치기반서비스 이용약관',
-  MARKETING: '마케팅 정보 수신',
 }
 
 export const inquiryStatusLabel: Record<InquiryStatus, string> = { RECEIVED: '접수', ANSWERED: '답변완료' }

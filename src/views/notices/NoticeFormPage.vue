@@ -21,7 +21,7 @@ const router = useRouter()
 const id = computed(() => (route.params.id ? Number(route.params.id) : null))
 const isEdit = computed(() => id.value !== null)
 
-const form = reactive<NoticeRequest>({ type: 'NOTICE', title: '', content: '', visible: true, publishedAt: toDateInput() })
+const form = reactive<NoticeRequest>({ type: 'ANNOUNCEMENT', title: '', content: '', visible: true, publishedAt: toDateInput() })
 const loading = ref(false)
 const saving = ref(false)
 
