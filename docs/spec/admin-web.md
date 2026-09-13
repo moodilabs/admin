@@ -353,7 +353,7 @@ src/
 
 | 환경 | `VITE_API_BASE_URL` | 비고 |
 |---|---|---|
-| local | `http://localhost:8080` | `vite dev` 프록시 `/api` → 백엔드, 포트 5174 |
+| local | `http://localhost:8080` | `vite dev` 프록시 `/api` → 백엔드, 포트 5173 |
 | dev | `https://dev-api.moodi.kr` | |
 | prod | `https://admin.moodi.kr` | Firebase Hosting 별도 사이트, `/api/**` → Cloud Run rewrite (동일 오리진이라 CORS 불필요) |
 

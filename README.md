@@ -13,7 +13,7 @@ Vue 3 · Vite · TypeScript · Tailwind CSS 4 · Pinia · vue-router · axios ·
 ```bash
 npm install
 cp .env.example .env.local   # 필요 시 API 주소 변경
-npm run dev                  # http://localhost:5174
+npm run dev                  # http://localhost:5173
 ```
 
 - `VITE_API_BASE_URL` — 백엔드 오리진. 개발 서버는 `/api` 를 이 주소로 프록시한다.
