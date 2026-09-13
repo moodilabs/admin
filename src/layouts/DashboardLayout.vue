@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, KeyRound, LogOut,
+  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, Activity, KeyRound, LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import PasswordChangeModal from '@/components/PasswordChangeModal.vue'
@@ -23,6 +23,7 @@ const navItems = computed(() => [
     ? [
         { name: 'accounts', label: '관리자 계정', icon: ShieldCheck },
         { name: 'audit-logs', label: '감사 로그', icon: ScrollText },
+        { name: 'api-logs', label: 'API 로그', icon: Activity },
       ]
     : []),
 ])

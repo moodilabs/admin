@@ -76,6 +76,7 @@ async function confirmAction() {
     <PageHeader :title="member.nickname ?? '(닉네임 없음)'">
       <template #actions>
         <Badge :tone="memberStatusTone[member.status]">{{ memberStatusLabel[member.status] }}</Badge>
+        <BaseButton v-if="auth.isSuper" variant="secondary" @click="router.push({ name: 'api-logs', query: { memberId } })">API 로그</BaseButton>
         <template v-if="auth.isSuper && member.status !== 'WITHDRAWN'">
           <BaseButton v-if="member.status === 'SUSPENDED'" variant="secondary" @click="openAction('unsuspend')">정지 해제</BaseButton>
           <BaseButton v-else variant="secondary" @click="openAction('suspend')">정지</BaseButton>
