@@ -64,7 +64,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
       :class="open && 'border-gray-900'"
       @click="toggle"
     >
-      <span :class="model === '' && placeholder && 'text-gray-500'">{{ selectedLabel }}</span>
+      <!-- 모든 옵션을 같은 칸에 겹쳐 그려 가장 긴 라벨 기준으로 너비를 고정한다 — 선택값이 바뀌어도 폭이 흔들리지 않는다 -->
+      <span class="grid">
+        <span v-for="item in items" :key="String(item.value)" class="invisible col-start-1 row-start-1" aria-hidden="true">{{ item.label }}</span>
+        <span class="col-start-1 row-start-1" :class="model === '' && placeholder && 'text-gray-500'">{{ selectedLabel }}</span>
+      </span>
       <ChevronDown class="size-4 shrink-0 text-gray-400 transition" :class="open && 'rotate-180'" />
     </button>
 
@@ -77,14 +81,14 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
       <ul
         v-if="open"
         role="listbox"
-        class="absolute left-0 z-20 mt-1 max-h-64 min-w-full overflow-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
+        class="absolute inset-x-0 z-20 mt-1 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white p-1 shadow-lg"
       >
         <li
           v-for="(item, i) in items"
           :key="String(item.value)"
           role="option"
           :aria-selected="item.value === model"
-          class="flex cursor-pointer items-center justify-between gap-3 rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap"
+          class="flex cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-sm whitespace-nowrap"
           :class="[
             i === highlighted ? 'bg-gray-100' : '',
             item.value === model ? 'font-medium text-gray-900' : 'text-gray-700',
@@ -92,8 +96,8 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
           @mouseenter="highlighted = i"
           @click="select(item.value)"
         >
-          {{ item.label }}
-          <Check v-if="item.value === model" class="size-4 text-gray-900" />
+          <span class="truncate">{{ item.label }}</span>
+          <Check v-if="item.value === model" class="size-4 shrink-0 text-gray-900" />
         </li>
       </ul>
     </Transition>
