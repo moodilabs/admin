@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  LayoutDashboard, Users, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, LogOut,
+  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 
@@ -13,11 +13,17 @@ const route = useRoute()
 const navItems = computed(() => [
   { name: 'dashboard', label: '대시보드', icon: LayoutDashboard },
   { name: 'members', label: '회원 관리', icon: Users },
+  { name: 'spots', label: '스팟 관리', icon: MapPin },
   { name: 'notices', label: '공지사항', icon: Megaphone },
   { name: 'faqs', label: 'FAQ', icon: CircleHelp },
   { name: 'policies', label: '약관 관리', icon: FileText },
   { name: 'inquiries', label: '1:1 문의', icon: MessageSquare },
-  ...(auth.isSuper ? [{ name: 'accounts', label: '관리자 계정', icon: ShieldCheck }] : []),
+  ...(auth.isSuper
+    ? [
+        { name: 'accounts', label: '관리자 계정', icon: ShieldCheck },
+        { name: 'audit-logs', label: '감사 로그', icon: ScrollText },
+      ]
+    : []),
 ])
 
 /** 대시보드(`/`)는 정확히 일치할 때만, 나머지는 하위 경로(상세·등록 등)까지 활성으로 본다. */
