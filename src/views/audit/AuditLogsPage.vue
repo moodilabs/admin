@@ -14,7 +14,7 @@ import LoadMore from '@/components/common/LoadMore.vue'
 
 const accounts = ref<AdminAccount[]>([])
 const adminId = ref<string | ''>('')
-const accountOptions = computed(() => accounts.value.map((a) => ({ value: a.id, label: `${a.name} (${a.email})` })))
+const accountOptions = computed(() => accounts.value.map((a) => ({ value: a.id, label: `${a.name} (${a.loginId})` })))
 const accountName = (id: string) => accounts.value.find((a) => a.id === id)?.name ?? id.slice(0, 8)
 
 const list = useCursorList<AuditLog>((cursor) => auditApi.list({ adminId: adminId.value || undefined, cursor }))

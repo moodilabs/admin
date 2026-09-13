@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, LogOut,
+  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, KeyRound, LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import PasswordChangeModal from '@/components/PasswordChangeModal.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -31,6 +32,8 @@ function isActive(name: string) {
   return name === 'dashboard' ? route.path === '/' : route.path.startsWith(`/${name}`)
 }
 
+const passwordModalOpen = ref(false)
+
 async function handleLogout() {
   await auth.logout()
   router.push({ name: 'login' })
@@ -55,10 +58,17 @@ async function handleLogout() {
       </nav>
       <div class="border-t border-gray-200 p-4">
         <div class="truncate text-sm font-medium">{{ auth.me?.name }}</div>
-        <div class="truncate text-xs text-gray-500">{{ auth.me?.email }}</div>
+        <div class="truncate font-mono text-xs text-gray-500">{{ auth.me?.loginId }}</div>
         <button
           type="button"
           class="mt-3 flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
+          @click="passwordModalOpen = true"
+        >
+          <KeyRound class="size-4" /> 비밀번호 변경
+        </button>
+        <button
+          type="button"
+          class="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100"
           @click="handleLogout"
         >
           <LogOut class="size-4" /> 로그아웃
@@ -68,6 +78,13 @@ async function handleLogout() {
     <main class="min-w-0 flex-1 overflow-y-auto p-8">
       <RouterView />
     </main>
+
+    <!-- 초기 비밀번호 상태면 닫을 수 없는 변경 모달을 띄운다 — 서버도 그 전까진 다른 API를 403으로 막는다 -->
+    <PasswordChangeModal
+      :open="auth.passwordChangeRequired || passwordModalOpen"
+      :forced="auth.passwordChangeRequired"
+      @close="passwordModalOpen = false"
+    />
 
   </div>
 </template>

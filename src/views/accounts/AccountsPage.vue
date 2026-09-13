@@ -21,7 +21,7 @@ const accounts = ref<AdminAccount[]>([])
 const loading = ref(false)
 
 const columns = [
-  { key: 'email', label: '이메일' },
+  { key: 'loginId', label: '아이디' },
   { key: 'name', label: '이름' },
   { key: 'role', label: '역할' },
   { key: 'status', label: '상태' },
@@ -45,10 +45,10 @@ onMounted(load)
 // 생성
 const createOpen = ref(false)
 const creating = ref(false)
-const form = reactive<AdminAccountCreateRequest>({ email: '', password: '', name: '', role: 'OPERATOR' })
+const form = reactive<AdminAccountCreateRequest>({ loginId: '', password: '', name: '', role: 'OPERATOR' })
 
 function openCreate() {
-  Object.assign(form, { email: '', password: '', name: '', role: 'OPERATOR' })
+  Object.assign(form, { loginId: '', password: '', name: '', role: 'OPERATOR' })
   createOpen.value = true
 }
 
@@ -101,8 +101,14 @@ async function toggleStatus(account: AdminAccount) {
     <template #role="{ row }">
       <Badge :tone="row.role === 'SUPER' ? 'blue' : 'gray'">{{ adminRoleLabel[row.role] }}</Badge>
     </template>
+    <template #loginId="{ row }">
+      <span class="font-mono">{{ row.loginId }}</span>
+    </template>
     <template #status="{ row }">
-      <Badge :tone="row.status === 'ACTIVE' ? 'green' : 'red'">{{ row.status === 'ACTIVE' ? '활성' : '비활성' }}</Badge>
+      <div class="flex flex-wrap gap-1">
+        <Badge :tone="row.status === 'ACTIVE' ? 'green' : 'red'">{{ row.status === 'ACTIVE' ? '활성' : '비활성' }}</Badge>
+        <Badge v-if="row.passwordChangeRequired" tone="yellow">초기 비밀번호</Badge>
+      </div>
     </template>
     <template #lastLoginAt="{ row }">{{ formatDateTime(row.lastLoginAt) }}</template>
     <template #createdAt="{ row }">{{ formatDateTime(row.createdAt) }}</template>
@@ -120,8 +126,8 @@ async function toggleStatus(account: AdminAccount) {
 
   <BaseModal :open="createOpen" title="관리자 계정 추가" @close="createOpen = false">
     <form id="create-account-form" class="space-y-4" @submit.prevent="submitCreate">
-      <FormField label="이메일" required>
-        <TextInput v-model="form.email" type="email" required autocomplete="off" />
+      <FormField label="아이디" required hint="영문·숫자·밑줄 4~20자">
+        <TextInput v-model="form.loginId" required :minlength="4" :maxlength="20" autocomplete="off" />
       </FormField>
       <FormField label="이름" required>
         <TextInput v-model="form.name" required :maxlength="50" />
@@ -129,7 +135,7 @@ async function toggleStatus(account: AdminAccount) {
       <FormField label="역할" required>
         <SelectField v-model="form.role" :options="toOptions(adminRoleLabel)" class="w-full" />
       </FormField>
-      <FormField label="초기 비밀번호" required hint="10자 이상">
+      <FormField label="초기 비밀번호" required hint="10자 이상. 첫 로그인 때 본인이 바꿔야 사용할 수 있습니다.">
         <TextInput v-model="form.password" type="password" required :minlength="10" autocomplete="new-password" />
       </FormField>
     </form>
