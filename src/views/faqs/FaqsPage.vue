@@ -131,7 +131,7 @@ const collapsed = reactive(new Set<number>())
 </script>
 
 <template>
-  <PageHeader title="FAQ" description="MY-05 · 카테고리와 항목의 순서가 앱에 그대로 반영됩니다.">
+  <PageHeader title="FAQ">
     <template #actions>
       <BaseButton @click="openCategory()">카테고리 추가</BaseButton>
     </template>

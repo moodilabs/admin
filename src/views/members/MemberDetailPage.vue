@@ -73,7 +73,7 @@ async function confirmAction() {
   </button>
 
   <template v-if="member">
-    <PageHeader :title="member.nickname ?? '(닉네임 없음)'" :description="member.email ?? undefined">
+    <PageHeader :title="member.nickname ?? '(닉네임 없음)'">
       <template #actions>
         <Badge :tone="memberStatusTone[member.status]">{{ memberStatusLabel[member.status] }}</Badge>
         <template v-if="auth.isSuper && member.status !== 'WITHDRAWN'">
@@ -89,6 +89,7 @@ async function confirmAction() {
         <h2 class="mb-3 text-sm font-semibold">프로필</h2>
         <dl class="space-y-2 text-sm">
           <div><dt class="text-xs text-gray-500">회원 ID</dt><dd class="font-mono text-xs">{{ member.id }}</dd></div>
+          <div><dt class="text-xs text-gray-500">이메일</dt><dd>{{ member.email ?? '-' }}</dd></div>
           <div><dt class="text-xs text-gray-500">가입 경로</dt><dd>{{ providerLabel[member.provider] }}</dd></div>
           <div><dt class="text-xs text-gray-500">국가</dt><dd>{{ member.country ?? '-' }}</dd></div>
           <div><dt class="text-xs text-gray-500">가입일</dt><dd>{{ formatDateTime(member.createdAt) }}</dd></div>

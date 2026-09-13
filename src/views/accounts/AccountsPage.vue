@@ -91,7 +91,7 @@ async function toggleStatus(account: AdminAccount) {
 </script>
 
 <template>
-  <PageHeader title="관리자 계정" description="SUPER 관리자만 계정을 추가·비활성화할 수 있습니다.">
+  <PageHeader title="관리자 계정">
     <template #actions>
       <BaseButton @click="openCreate">계정 추가</BaseButton>
     </template>

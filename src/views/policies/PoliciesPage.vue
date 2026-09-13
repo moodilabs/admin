@@ -59,7 +59,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <PageHeader title="약관 관리" description="MY-07 · 시행된 버전은 수정·삭제할 수 없습니다. 변경은 새 버전으로 등록하세요.">
+  <PageHeader title="약관 관리">
     <template #actions>
       <BaseButton @click="router.push({ name: 'policy-new' })">새 버전 등록</BaseButton>
     </template>

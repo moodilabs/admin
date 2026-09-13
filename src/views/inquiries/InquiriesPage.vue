@@ -34,7 +34,7 @@ const columns = [
 </script>
 
 <template>
-  <PageHeader title="1:1 문의" description="MY-06 · 접수(RECEIVED) 문의가 먼저 정렬됩니다." />
+  <PageHeader title="1:1 문의" />
 
   <div class="mb-4 flex gap-2">
     <SelectField v-model="status" :options="toOptions(inquiryStatusLabel)" placeholder="전체 상태" />

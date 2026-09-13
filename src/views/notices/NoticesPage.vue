@@ -69,7 +69,7 @@ async function confirmDelete() {
 </script>
 
 <template>
-  <PageHeader title="공지사항" description="MY-04 · 앱 마이페이지 공지 목록에 노출됩니다.">
+  <PageHeader title="공지사항">
     <template #actions>
       <BaseButton @click="router.push({ name: 'notice-new' })">공지 등록</BaseButton>
     </template>
