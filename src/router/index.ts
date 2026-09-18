@@ -34,6 +34,7 @@ const routes: RouteRecordRaw[] = [
       { path: 'recommended-routes/new', name: 'recommended-route-new', component: () => import('@/views/recommended-routes/RecommendedRouteFormPage.vue'), meta: { title: '추천 루트 등록' } },
       { path: 'recommended-routes/:id', name: 'recommended-route-edit', component: () => import('@/views/recommended-routes/RecommendedRouteFormPage.vue'), meta: { title: '추천 루트 수정' } },
       { path: 'recommended-areas', name: 'recommended-areas', component: () => import('@/views/recommended-areas/RecommendedAreasPage.vue'), meta: { title: '추천 지역' } },
+      { path: 'survey-images', name: 'survey-images', component: () => import('@/views/survey-images/SurveyImagesPage.vue'), meta: { title: '사전조사 이미지' } },
       { path: 'policies', name: 'policies', component: () => import('@/views/policies/PoliciesPage.vue'), meta: { title: '약관 관리' } },
       { path: 'policies/new', name: 'policy-new', component: () => import('@/views/policies/PolicyFormPage.vue'), meta: { title: '약관 등록' } },
       { path: 'policies/:id', name: 'policy-edit', component: () => import('@/views/policies/PolicyFormPage.vue'), meta: { title: '약관 수정' } },
