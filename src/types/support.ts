@@ -60,6 +60,8 @@ export interface PolicySummary {
   version: string
   /** YYYY-MM-DD */
   effectiveAt: string
+  /** 동의한 회원이 있으면 true — 수정·삭제 불가 */
+  agreed: boolean
 }
 
 export interface PolicyDetail extends PolicySummary {

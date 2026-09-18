@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { policiesApi } from '@/api/policies.api'
 import { getErrorCode, getErrorMessage } from '@/utils/error'
-import { isFutureDate, toDateInput } from '@/utils/format'
+import { toDateInput } from '@/utils/format'
 import { policyTypeLabel, toOptions } from '@/utils/labels'
 import type { PolicyRequest } from '@/types/support'
 import PageHeader from '@/components/common/PageHeader.vue'
@@ -53,7 +53,7 @@ onMounted(async () => {
       content: policy.content,
       effectiveAt: policy.effectiveAt.slice(0, 10),
     })
-    readonly.value = !isFutureDate(form.effectiveAt)
+    readonly.value = policy.agreed
   } catch (error) {
     toast.error(getErrorMessage(error))
     router.replace({ name: 'policies' })
@@ -76,7 +76,7 @@ async function submit() {
   } catch (error) {
     const code = getErrorCode(error)
     if (code === 'POLICY_VERSION_DUPLICATE') toast.error('같은 약관에 이미 존재하는 버전입니다.')
-    else if (code === 'POLICY_ALREADY_EFFECTIVE') toast.error('이미 시행된 약관은 수정할 수 없습니다. 새 버전으로 등록하세요.')
+    else if (code === 'POLICY_ALREADY_AGREED') toast.error('회원이 이미 동의한 약관은 수정할 수 없습니다. 새 버전으로 등록하세요.')
     else toast.error(getErrorMessage(error))
   } finally {
     saving.value = false
