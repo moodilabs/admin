@@ -67,6 +67,8 @@ export interface PolicySummary {
   enabled: boolean
   /** 앱 약관보기 노출 */
   visible: boolean
+  /** 동의한 회원이 있으면 true — 수정·삭제 불가 */
+  agreed: boolean
 }
 
 export interface PolicyDetail extends PolicySummary {

@@ -117,7 +117,7 @@ async function confirmDelete() {
     <template #actions="{ row }">
       <div class="flex justify-end" @click.stop>
         <BaseButton
-          v-if="isFutureDate(row.effectiveAt.slice(0, 10))"
+          v-if="!row.agreed"
           variant="danger"
           class="!px-3 !py-1"
           @click="deleteTarget = row"
@@ -129,7 +129,7 @@ async function confirmDelete() {
   <ConfirmDialog
     :open="deleteTarget !== null"
     title="약관 버전 삭제"
-    :message="`${deleteTarget ? policyTypeLabel[deleteTarget.type] : ''} ${deleteTarget ? policyLocaleLabel[deleteTarget.locale] : ''} v${deleteTarget?.version} (시행 예정)을 삭제합니다.`"
+    :message="`${deleteTarget ? policyTypeLabel[deleteTarget.type] : ''} ${deleteTarget ? policyLocaleLabel[deleteTarget.locale] : ''} v${deleteTarget?.version}을 삭제합니다.`"
     confirm-label="삭제"
     danger
     :loading="deleting"
