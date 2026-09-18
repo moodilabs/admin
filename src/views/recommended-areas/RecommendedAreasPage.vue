@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import { ChevronDown, ChevronUp, Pencil, Trash2, Search } from 'lucide-vue-next'
 import { recommendedAreasApi } from '@/api/recommended-areas.api'
@@ -136,6 +136,8 @@ watch(keyword, (value) => {
     }
   }, SUGGEST_DEBOUNCE_MS)
 })
+
+onBeforeUnmount(() => clearTimeout(debounceTimer))
 
 function areaPath(area: AreaSuggestion) {
   return [area.region, area.district, area.neighborhood].filter(Boolean).join(' › ')

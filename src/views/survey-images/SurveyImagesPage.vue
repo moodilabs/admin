@@ -95,7 +95,7 @@ const searchColumns = [
   { key: 'title', label: '스팟' },
   { key: 'contentType', label: '유형', class: 'w-24' },
   { key: 'location', label: '지역', class: 'w-36' },
-  { key: 'action', label: '', class: 'w-20 text-right' },
+  { key: 'action', label: '', class: 'w-24 text-right whitespace-nowrap' },
 ]
 
 async function openModal(image?: SurveyImage) {
