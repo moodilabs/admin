@@ -7,7 +7,8 @@ import { membersApi } from '@/api/members.api'
 import { useAuthStore } from '@/stores/auth'
 import { getErrorMessage } from '@/utils/error'
 import { formatDateTime, formatNumber } from '@/utils/format'
-import { memberStatusLabel, memberStatusTone, providerLabel } from '@/utils/labels'
+import { agreementTypeLabel, genderLabel, memberStatusLabel, memberStatusTone, policyLocaleLabel, providerLabel, withdrawalReasonLabel } from '@/utils/labels'
+import type { PolicyLocale } from '@/types/support'
 import type { MemberDetail } from '@/types/member'
 import PageHeader from '@/components/common/PageHeader.vue'
 import Card from '@/components/common/Card.vue'
@@ -22,6 +23,11 @@ const auth = useAuthStore()
 const memberId = String(route.params.memberId)
 
 const member = ref<MemberDetail | null>(null)
+
+/** 서버 locale 문자열은 'ko-KR'|'en-US'만 오지만 타입이 string이라 라벨 조회를 방어한다 */
+function localeLabel(locale: string | null) {
+  return locale ? (policyLocaleLabel[locale as PolicyLocale] ?? locale) : null
+}
 
 async function load() {
   try {
@@ -85,7 +91,7 @@ async function confirmAction() {
       </template>
     </PageHeader>
 
-    <div class="grid gap-6 lg:grid-cols-3">
+    <div class="grid gap-6 lg:grid-cols-2 xl:grid-cols-4">
       <Card>
         <h2 class="mb-3 text-sm font-semibold">프로필</h2>
         <dl class="space-y-2 text-sm">
@@ -93,6 +99,7 @@ async function confirmAction() {
           <div><dt class="text-xs text-gray-500">이메일</dt><dd>{{ member.email ?? '-' }}</dd></div>
           <div><dt class="text-xs text-gray-500">가입 경로</dt><dd>{{ providerLabel[member.provider] }}</dd></div>
           <div><dt class="text-xs text-gray-500">국가</dt><dd>{{ member.country ?? '-' }}</dd></div>
+          <div><dt class="text-xs text-gray-500">출생연도 · 성별</dt><dd>{{ member.birthYear ?? '-' }} · {{ member.gender ? genderLabel[member.gender] : '-' }}</dd></div>
           <div><dt class="text-xs text-gray-500">가입일</dt><dd>{{ formatDateTime(member.createdAt) }}</dd></div>
           <div><dt class="text-xs text-gray-500">선호 무드</dt>
             <dd class="mt-1 flex flex-wrap gap-1">
@@ -106,16 +113,28 @@ async function confirmAction() {
       <Card>
         <h2 class="mb-3 text-sm font-semibold">활동</h2>
         <dl class="grid grid-cols-3 gap-3 text-center">
-          <div><dt class="text-xs text-gray-500">북마크</dt><dd class="text-xl font-bold">{{ formatNumber(member.bookmarkCount) }}</dd></div>
+          <div><dt class="text-xs text-gray-500">저장 스팟</dt><dd class="text-xl font-bold">{{ formatNumber(member.savedSpotCount) }}</dd></div>
           <div><dt class="text-xs text-gray-500">루트</dt><dd class="text-xl font-bold">{{ formatNumber(member.routeCount) }}</dd></div>
           <div><dt class="text-xs text-gray-500">문의</dt><dd class="text-xl font-bold">{{ formatNumber(member.inquiryCount) }}</dd></div>
         </dl>
-        <h2 class="mt-6 mb-3 text-sm font-semibold">약관 동의</h2>
-        <ul class="space-y-1 text-sm">
-          <li v-for="a in member.policyAgreements" :key="a.type" class="flex justify-between">
-            <span>{{ a.type }}</span><span class="text-xs text-gray-500">{{ formatDateTime(a.agreedAt) }}</span>
+      </Card>
+
+      <Card>
+        <h2 class="mb-3 text-sm font-semibold">약관 동의 이력</h2>
+        <ul class="divide-y divide-gray-100 text-sm">
+          <li v-for="a in member.agreements" :key="a.type" class="py-2">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-medium">{{ agreementTypeLabel[a.type] ?? a.type }}</span>
+              <Badge :tone="a.agreed ? 'green' : 'gray'">{{ a.agreed ? '동의' : '미동의' }}</Badge>
+            </div>
+            <div class="mt-0.5 flex items-center justify-between gap-2 text-xs text-gray-500">
+              <span>{{ a.agreedAt ? formatDateTime(a.agreedAt) : '-' }}</span>
+              <!-- 동의 당시 시행본 스냅샷. V29 이전 동의는 버전을 추정해 채우지 않아 null -->
+              <span v-if="a.policyVersion" class="font-mono">v{{ a.policyVersion }}<template v-if="localeLabel(a.policyLocale)"> · {{ localeLabel(a.policyLocale) }}</template></span>
+              <span v-else-if="a.agreed" class="text-gray-400">버전 기록 없음</span>
+            </div>
           </li>
-          <li v-if="member.policyAgreements.length === 0" class="text-gray-400">-</li>
+          <li v-if="member.agreements.length === 0" class="py-2 text-gray-400">동의 기록이 없습니다 (온보딩 전).</li>
         </ul>
       </Card>
 
@@ -127,8 +146,14 @@ async function confirmAction() {
             <div><dt class="text-xs text-gray-500">정지 사유</dt><dd>{{ member.suspendReason ?? '-' }}</dd></div>
           </template>
           <template v-if="member.deletedAt">
-            <div><dt class="text-xs text-gray-500">탈퇴일</dt><dd>{{ formatDateTime(member.deletedAt) }}</dd></div>
-            <div><dt class="text-xs text-gray-500">탈퇴 사유</dt><dd>{{ member.withdrawalReason ?? '-' }}</dd></div>
+            <div><dt class="text-xs text-gray-500">탈퇴일</dt><dd>{{ formatDateTime(member.withdrawal?.withdrawnAt ?? member.deletedAt) }}</dd></div>
+            <div><dt class="text-xs text-gray-500">탈퇴 사유</dt>
+              <dd class="mt-1 flex flex-wrap gap-1">
+                <Badge v-for="reason in member.withdrawal?.reasons ?? []" :key="reason" :tone="reason === 'ADMIN_FORCED' ? 'red' : 'gray'">{{ withdrawalReasonLabel[reason] }}</Badge>
+                <span v-if="!member.withdrawal?.reasons?.length" class="text-gray-400">-</span>
+              </dd>
+            </div>
+            <div v-if="member.withdrawal?.detail"><dt class="text-xs text-gray-500">상세</dt><dd class="whitespace-pre-line">{{ member.withdrawal.detail }}</dd></div>
           </template>
           <p v-if="!member.suspendedAt && !member.deletedAt" class="text-gray-400">이력이 없습니다.</p>
         </dl>

@@ -1,4 +1,4 @@
-import type { MemberStatus, Provider } from '@/types/member'
+import type { AgreementType, Gender, MemberStatus, Provider, WithdrawalReason } from '@/types/member'
 import type { InquiryStatus, InquiryTopic, NoticeType, PolicyLocale, PolicyType } from '@/types/support'
 import type { AreaLevel } from '@/types/curation'
 import type { AdminRole } from '@/types/auth'
@@ -13,6 +13,16 @@ export const memberStatusTone: Record<MemberStatus, Tone> = {
   PENDING: 'yellow', ACTIVE: 'green', SUSPENDED: 'red', WITHDRAWN: 'gray',
 }
 export const providerLabel: Record<Provider, string> = { GOOGLE: '구글', APPLE: '애플' }
+
+export const genderLabel: Record<Gender, string> = { MALE: '남성', FEMALE: '여성', OTHER: '기타' }
+
+export const agreementTypeLabel: Record<AgreementType, string> = {
+  TERMS_OF_SERVICE: '이용약관', PRIVACY_POLICY: '개인정보처리방침', AGE_OVER_14: '만 14세 이상', MARKETING: '마케팅 정보 수신',
+}
+export const withdrawalReasonLabel: Record<WithdrawalReason, string> = {
+  NOT_USED_MUCH: '자주 쓰지 않음', RECOMMENDATION_MISMATCH: '추천이 맞지 않음', HARD_TO_USE: '사용이 어려움',
+  FOUND_ANOTHER_APP: '다른 앱 사용', OTHER: '기타', ADMIN_FORCED: '관리자 강제 탈퇴',
+}
 
 export const noticeTypeLabel: Record<NoticeType, string> = {
   ANNOUNCEMENT: '공지', MAINTENANCE: '점검', UPDATE: '업데이트', ISSUE: '장애', EVENT: '이벤트', OTHER: '기타',

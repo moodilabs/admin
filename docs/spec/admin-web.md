@@ -168,10 +168,11 @@
 
 ### 상세
 - 헤더: 닉네임 · 이메일 · 상태 배지 · (SUPER) 정지/해제 · 강제 탈퇴 버튼. `WITHDRAWN`이면 버튼 전부 숨김.
-- 카드 3개:
-  1. **프로필** — 회원 ID(mono) · 가입 경로 · 국가 · 가입일 · 선호 무드(배지).
-  2. **활동** — 북마크 · 루트 · 문의 수 / 약관 동의(유형 · 시각).
-  3. **상태 이력** — 정지일·사유 / 탈퇴일·사유. 둘 다 없으면 "이력이 없습니다."
+- 카드 4개 (`AdminMemberDetailResponse`와 1:1):
+  1. **프로필** — 회원 ID(mono) · 이메일 · 가입 경로 · 국가 · 출생연도·성별 · 가입일 · 선호 무드(배지).
+  2. **활동** — 저장 스팟(`savedSpotCount`) · 루트 · 문의 수.
+  3. **약관 동의 이력** (V29) — `agreements[]`: 유형(이용약관·개인정보처리방침·만 14세·마케팅) · 동의/미동의 배지 · 동의 일시 · **동의한 약관 버전**(`policyVersion` + 언어). 버전은 동의 당시 시행본 스냅샷이라 V29 이전 동의·시행본이 없던 종류는 null → "버전 기록 없음". 온보딩 전이면 빈 목록.
+  4. **상태 이력** — 정지일·사유 / 탈퇴일(`withdrawal.withdrawnAt`)·사유 배지(`withdrawal.reasons`, `ADMIN_FORCED`는 빨강)·상세. 둘 다 없으면 "이력이 없습니다."
 - 정지: ConfirmDialog + 사유 textarea(200자). 해제: 확인만. 강제 탈퇴: danger 확인("저장 스팟·생성 루트가 삭제되며 되돌릴 수 없습니다.").
 - 처리 후 상세 재조회.
 
@@ -182,14 +183,18 @@
 | `PATCH /members/{memberId}/status` `{ status: SUSPENDED\|ACTIVE, reason }` (SUPER) | 정지/해제 |
 | `POST /members/{memberId}/withdrawal` (SUPER) | 강제 탈퇴 |
 
-상세 응답 필드(프론트 가정 — 백엔드 확정 시 맞춤):
+상세 응답 필드(백엔드 `AdminMemberDetailResponse` 기준, `types/member.ts`와 1:1):
 
 ```json
-{ "id": "uuid", "nickname": "moi", "email": "a@b.c", "provider": "GOOGLE", "status": "ACTIVE", "country": "KR",
-  "createdAt": "…", "preferredMoods": ["CALM", "COZY"],
-  "policyAgreements": [{ "type": "TERMS_OF_SERVICE", "agreedAt": "…" }],
-  "bookmarkCount": 36, "routeCount": 6, "inquiryCount": 1,
-  "suspendedAt": null, "suspendReason": null, "deletedAt": null, "withdrawalReason": null }
+{ "id": "uuid", "nickname": "moi", "email": "a@b.c", "provider": "GOOGLE", "status": "ACTIVE",
+  "country": "KR", "birthYear": 1995, "gender": "FEMALE", "createdAt": "…", "preferredMoods": ["SERENE", "COZY"],
+  "agreements": [
+    { "type": "TERMS_OF_SERVICE", "agreed": true, "agreedAt": "…", "policyId": 12, "policyVersion": "1.1", "policyLocale": "en-US" },
+    { "type": "MARKETING", "agreed": false, "agreedAt": null, "policyId": null, "policyVersion": null, "policyLocale": null }
+  ],
+  "savedSpotCount": 36, "routeCount": 6, "inquiryCount": 1,
+  "suspendedAt": null, "suspendReason": null, "deletedAt": null,
+  "withdrawal": null }
 ```
 
 ---
@@ -321,6 +326,23 @@
 - `sortOrder`는 등록 시 현재 개수, 수정 시 기존 값 유지.
 
 > 앱용 `/api/v1/picks/areas`는 회원 토큰이 필요해 관리자 웹에서 못 쓴다. 같은 후보를 `/api/admin/recommended-areas/suggest`로 받는다(백엔드 PR).
+
+---
+
+## 7-3. 사전조사 이미지 (ADW-11-01) — V29
+
+회원가입 사전조사(AUT-05)에 노출되는 무드 대표 이미지. 백엔드 §17 `/api/admin/survey-images`.
+
+### 목록 (`/survey-images`) — 단일 페이지 + 모달
+- 리스트: 순번 · 썸네일 · 무드 배지 · 스팟 제목 · 이미지 URL · ↑↓ · 수정 · 삭제. 응답에 `spotId`만 있어 제목은 `GET /spots/{id}`로 읽어 캐시.
+- 상단에 **무드 20종 중 N종 등록** + 미등록 무드 배지 — 이미지 없는 무드는 사전조사에서 고를 수 없으므로 빠진 무드가 바로 보이게.
+- 순서는 전체 ID 배열을 `PUT /order`로 교체.
+
+### 등록/수정 모달 (무드 → 스팟 → 이미지 순)
+- 무드 셀렉트(`MoodTag` 20종, 등록 시 기본값은 첫 미등록 무드) → 스팟 검색(`GET /spots?status=PUBLISHED`)에서 "선택" → 그 스팟의 `images` 그리드에서 클릭.
+- 서버가 "그 스팟에 등록된 이미지 URL"만 받으므로 URL 직접 입력은 없다. 스팟을 바꾸면 이전 이미지 선택은 해제.
+- `SPOT_NOT_AVAILABLE` 400 → "노출 중인 스팟에 등록된 이미지만 쓸 수 있습니다."
+- `sortOrder`는 등록 시 현재 개수, 수정 시 기존 값 유지. 삭제는 사전조사 연결만 지운다(원본 스팟 이미지 유지).
 
 ---
 
