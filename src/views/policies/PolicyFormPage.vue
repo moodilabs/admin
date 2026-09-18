@@ -5,7 +5,7 @@ import { toast } from 'vue-sonner'
 import { policiesApi } from '@/api/policies.api'
 import { getErrorCode, getErrorMessage } from '@/utils/error'
 import { isFutureDate, toDateInput } from '@/utils/format'
-import { policyTypeLabel, toOptions } from '@/utils/labels'
+import { policyLocaleLabel, policyTypeLabel, toOptions } from '@/utils/labels'
 import type { PolicyRequest } from '@/types/support'
 import PageHeader from '@/components/common/PageHeader.vue'
 import Card from '@/components/common/Card.vue'
@@ -15,26 +15,30 @@ import FormField from '@/components/common/FormField.vue'
 import TextInput from '@/components/common/TextInput.vue'
 import TextArea from '@/components/common/TextArea.vue'
 import SelectField from '@/components/common/SelectField.vue'
+import Toggle from '@/components/common/Toggle.vue'
 
 const route = useRoute()
 const router = useRouter()
 const id = computed(() => (route.params.id ? Number(route.params.id) : null))
 const isEdit = computed(() => id.value !== null)
 
-const form = reactive<PolicyRequest>({ type: 'TERMS_OF_SERVICE', version: '', content: '', effectiveAt: toDateInput() })
+const form = reactive<PolicyRequest>({
+  type: 'TERMS_OF_SERVICE', version: '', content: '', effectiveAt: toDateInput(), locale: 'en-US', enabled: true, visible: true,
+})
 const loading = ref(false)
 const saving = ref(false)
 /** 시행된 버전은 읽기 전용 */
 const readonly = ref(false)
 
 onMounted(async () => {
-  // 시행된 버전에서 "이 내용으로 새 버전" — 유형·전문만 복사
+  // 시행된 버전에서 "이 내용으로 새 버전" — 유형·언어·전문만 복사
   const from = typeof route.query.from === 'string' ? Number(route.query.from) : null
   if (!isEdit.value && from) {
     loading.value = true
     try {
       const source = await policiesApi.get(from)
       form.type = source.type
+      form.locale = source.locale
       form.content = source.content
     } catch (error) {
       toast.error(getErrorMessage(error))
@@ -52,6 +56,9 @@ onMounted(async () => {
       version: policy.version,
       content: policy.content,
       effectiveAt: policy.effectiveAt.slice(0, 10),
+      locale: policy.locale,
+      enabled: policy.enabled,
+      visible: policy.visible,
     })
     readonly.value = !isFutureDate(form.effectiveAt)
   } catch (error) {
@@ -75,7 +82,7 @@ async function submit() {
     router.push({ name: 'policies' })
   } catch (error) {
     const code = getErrorCode(error)
-    if (code === 'POLICY_VERSION_DUPLICATE') toast.error('같은 약관에 이미 존재하는 버전입니다.')
+    if (code === 'POLICY_VERSION_DUPLICATE') toast.error('같은 약관·언어에 이미 존재하는 버전입니다.')
     else if (code === 'POLICY_ALREADY_EFFECTIVE') toast.error('이미 시행된 약관은 수정할 수 없습니다. 새 버전으로 등록하세요.')
     else toast.error(getErrorMessage(error))
   } finally {
@@ -98,9 +105,12 @@ function copyAsNew() {
 
   <Card class="max-w-3xl">
     <form v-if="!loading" class="space-y-5" @submit.prevent="submit">
-      <div class="grid grid-cols-3 gap-4">
+      <div class="grid grid-cols-4 gap-4">
         <FormField label="약관" required>
           <SelectField v-model="form.type" :options="toOptions(policyTypeLabel)" :disabled="readonly" class="w-full" />
+        </FormField>
+        <FormField label="언어" required hint="같은 버전을 국문·영문 각각 등록">
+          <SelectField v-model="form.locale" :options="toOptions(policyLocaleLabel)" :disabled="readonly" class="w-full" />
         </FormField>
         <FormField label="버전" required hint="예) 1.0, 1.1">
           <TextInput v-model="form.version" required :maxlength="20" :disabled="readonly" />
@@ -108,6 +118,11 @@ function copyAsNew() {
         <FormField label="시행일" required hint="오늘 이후로 지정">
           <TextInput v-model="form.effectiveAt" type="date" required :disabled="readonly" />
         </FormField>
+      </div>
+      <div class="flex gap-8">
+        <Toggle v-model="form.enabled" label="시행 활성" :disabled="readonly" />
+        <Toggle v-model="form.visible" label="앱 약관보기에 공개" :disabled="readonly" />
+        <span v-if="readonly" class="text-xs text-gray-400">시행된 버전의 시행·공개 상태는 목록에서 변경합니다.</span>
       </div>
       <FormField label="전문" required>
         <TextArea v-model="form.content" required :rows="24" :disabled="readonly" />

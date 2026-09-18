@@ -250,30 +250,77 @@
 
 ---
 
-## 7. 약관 관리 (ADW-05-01 / 05-02)
+## 7. 약관 관리 (ADW-05-01 / 05-02) — V29 반영
 
 ### 목록
-- 필터: 약관 유형(`TERMS_OF_SERVICE|PRIVACY_POLICY`, 백엔드 `PolicyType`. 가입 필수 약관과 1:1이라 종류 추가는 백엔드 `AgreementType`과 같이 결정).
-- 컬럼: 약관 · 버전(mono) · 시행일 · 상태(**시행 중** 초록 / **시행 예정** 노랑) · 액션.
-- 상태는 프론트에서 `effectiveAt > 오늘` 로 계산(서버 시각과 하루 차이 날 수 있음 → 최종 판정은 서버 409).
+- 필터: 약관 유형(`TERMS_OF_SERVICE|PRIVACY_POLICY|MARKETING`, 백엔드 `PolicyType`) · 언어(`ko-KR|en-US`, 서버 필터가 없어 클라이언트에서 거른다).
+- 컬럼: 약관 · 언어 · 버전(mono) · 시행일 · 상태 · 시행(토글) · 공개(토글) · 액션.
+- 상태: **시행 예정**(노랑, `effectiveAt > 오늘`) / **시행 중지**(회색, 시행일 지났지만 `enabled=false`) / **시행 중**(초록).
+  프론트 계산이라 서버 시각과 하루 차이 날 수 있음 → 최종 판정은 서버 409.
+- 시행·공개 토글은 `PATCH /policies/{id}/publication` — **시행된 버전도 바꿀 수 있는 유일한 필드**라 목록에서 바로 바꾼다.
 - 삭제 버튼은 **시행 예정만** 노출.
 
 ### 등록/수정/전문 (같은 폼)
-- 등록: 약관 · 버전(≤20) · 시행일(오늘 이후) · 전문(textarea 24줄).
+- 등록: 약관 · 언어 · 버전(≤20) · 시행일(오늘 이후) · 시행 활성 · 공개 · 전문(textarea 24줄). 중복 기준은 `(type, version, locale)`이라 같은 버전을 국문·영문 각각 등록한다.
 - 시행 예정 버전 수정: 전 필드 편집 가능.
-- **시행된 버전**: 읽기 전용(전 필드 disabled) + "시행 중 · 읽기 전용" 배지 + **"이 내용으로 새 버전"** 버튼 → `/policies/new?from={id}` 로 이동해 유형·전문만 복사(버전·시행일은 비움). 오탈자도 새 버전으로 고친다는 백엔드 정책(§6)을 UI가 그대로 강제.
+- **시행된 버전**: 읽기 전용(전 필드 disabled, 토글 포함) + "시행 중 · 읽기 전용" 배지 + **"이 내용으로 새 버전"** 버튼 → `/policies/new?from={id}` 로 이동해 유형·언어·전문만 복사(버전·시행일은 비움). 오탈자도 새 버전으로 고친다는 백엔드 정책(§6)을 UI가 그대로 강제. 시행·공개 상태는 목록에서 바꾸라고 안내.
 
 | API | 사용 |
 |---|---|
-| `GET /policies?type=` → `[{ id, type, version, effectiveAt }]` (미래 시행분 포함, `effectiveAt DESC`) | 목록 |
+| `GET /policies?type=` → `[{ id, type, version, effectiveAt, locale, enabled, visible }]` (미래 시행분 포함, `effectiveAt DESC`) | 목록 |
 | `GET /policies/{id}` · `POST /policies` · `PUT /policies/{id}` · `DELETE /policies/{id}` | 폼·삭제 |
+| `PATCH /policies/{id}/publication` `{ enabled, visible }` | 목록 토글 |
 
 에러 분기:
 
 | code | 처리 |
 |---|---|
-| `POLICY_VERSION_DUPLICATE` 409 | "같은 약관에 이미 존재하는 버전입니다." 폼 유지 |
+| `POLICY_VERSION_DUPLICATE` 409 | "같은 약관·언어에 이미 존재하는 버전입니다." 폼 유지 |
 | `POLICY_ALREADY_EFFECTIVE` 409 | "이미 시행된 약관은 수정할 수 없습니다. 새 버전으로 등록하세요." |
+
+---
+
+## 7-1. 추천 루트 (ADW-09-01 / 09-02) — V29
+
+앱 Discover 메인 B(선호 무드 미설정)의 추천 루트 캐러셀. 백엔드 §17 `/api/admin/recommended-routes`.
+
+### 목록 (`/recommended-routes`)
+- 카드 리스트(테이블 아님): 순번 · 썸네일 · 제목 · 배지 · 지역 · 일수 · 스팟 수 · 노출 토글 · ↑↓ · 수정 · 삭제. 행 클릭 → 수정.
+- 배지: **앱 노출 N번째**(파랑, 노출 상태 중 상위 3개) / **노출 대기**(노랑, 노출이지만 4번째 이후) / **숨김**(회색).
+  앱이 "노출 상태 루트 중 순서대로 3개"만 보여주므로 운영자가 어떤 게 실제로 나가는지 목록에서 바로 알 수 있게 한다.
+- 순서는 FAQ와 같은 방식 — 숨김 포함 전체 ID 배열을 `PUT /order`로 교체.
+- 노출 토글이 `SPOT_NOT_AVAILABLE` 400이면 "숨김·삭제된 스팟이 포함된 루트는 노출할 수 없습니다" 안내.
+
+### 등록/수정 (`/recommended-routes/new` · `/:id`)
+- 기본 정보 카드: 제목(≤100) · 지역(≤100, 카드 표시용 자유 문자열) · 대표 이미지 URL(http(s), ≤2000) + 미리보기 · 앱 노출 토글.
+  "스팟 이미지에서 선택" → 담은 스팟들의 이미지 그리드에서 고르면 URL이 채워진다.
+- 일정: Day 카드 1~5개. 각 Day에 스팟 1~6개, 전체 30개 이하. ↑↓로 순서, X로 제거. 비어 있는 Day는 저장 불가(서버가 day·sequence 연속을 요구).
+- 스팟 담기 모달: `GET /spots?keyword=&area=&status=PUBLISHED` 커서 목록. 이미 담긴 스팟은 "담김" 배지. 담을 때 `GET /spots/{id}`로 상세를 읽어 이미지 목록까지 보관.
+- 저장 시 `stops = [{ spotId, day: Day 인덱스+1, sequence: 순서+1 }]`로 변환. `sortOrder`는 등록 시 현재 개수(맨 뒤), 수정 시 기존 값 유지.
+- 수정 진입 시 응답에 spotId만 있어 스팟 상세를 병렬로 읽는다(최대 30건).
+
+| code | 처리 |
+|---|---|
+| `SPOT_NOT_AVAILABLE` 400 | "노출 중(PUBLISHED)인 스팟만 담을 수 있습니다. 상태가 바뀐 스팟을 교체하세요." |
+| `INVALID_REQUEST` 400 | 서버 `detail` 그대로 (프론트가 먼저 빈 Day·URL 형식을 막는다) |
+
+---
+
+## 7-2. 추천 지역 (ADW-10-01) — V29
+
+앱 DSC-04(스팟 추천 입력)의 인기 지역 섹션. 백엔드 §17 `/api/admin/recommended-areas`.
+
+### 목록 (`/recommended-areas`) — 단일 페이지 + 모달
+- 리스트: 순번 · 표시 이름 · 레벨 배지(시/도·시/군/구·동/면) · 지역 경로(`서울 › 성동구 › 성수동`) · ↑↓ · 수정 · 삭제.
+- 앱은 위에서 5개까지만 보여주므로 6번째부터 **앱 미노출** 배지 + 순번 회색.
+- 순서는 전체 ID 배열을 `PUT /order`로 교체.
+
+### 등록/수정 모달
+- 지역 검색(2자 이상, 250ms 디바운스) → `GET /recommended-areas/suggest?keyword=` 드롭다운. 선택하면 `level·region·district·neighborhood`가 채워지고 표시 이름은 서버 `label`을 기본값으로 넣는다(수정 가능, ≤200).
+- 자유 입력 불가 — 자동완성에서 고른 값이 없으면 저장 버튼 disabled. 서버도 원장에 없는 지역은 `INVALID_REQUEST`로 거절 → "자동완성 목록에 있는 지역만 등록할 수 있습니다."
+- `sortOrder`는 등록 시 현재 개수, 수정 시 기존 값 유지.
+
+> 앱용 `/api/v1/picks/areas`는 회원 토큰이 필요해 관리자 웹에서 못 쓴다. 같은 후보를 `/api/admin/recommended-areas/suggest`로 받는다(백엔드 PR).
 
 ---
 
@@ -323,15 +370,15 @@
 
 ```
 src/
-├── api/            client · auth · accounts · dashboard · members · notices · faqs · policies · inquiries · (spots)
-├── types/          api · auth · member · support · dashboard · (spot)
+├── api/            client · auth · accounts · dashboard · members · notices · faqs · policies · inquiries · spots · recommended-routes · recommended-areas
+├── types/          api · auth · member · support · dashboard · spot · curation
 ├── stores/auth.ts
 ├── router/index.ts  meta: { title, public?, superOnly? }
 ├── layouts/DashboardLayout.vue
 ├── components/common/
 ├── composables/useCursorList.ts
 ├── utils/          token · error · format · labels
-└── views/{auth,dashboard,members,notices,faqs,policies,inquiries,accounts,(spots)}/
+└── views/{auth,dashboard,members,spots,recommended-routes,recommended-areas,notices,faqs,policies,inquiries,accounts,audit}/
 ```
 
 | 라우트 | name | meta |
