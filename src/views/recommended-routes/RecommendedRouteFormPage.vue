@@ -30,7 +30,8 @@ interface RouteSpot {
   title: string
   area: string | null
   district: string | null
-  contentType: SpotDetail['contentType']
+  /** 상세 조회에 실패한 스팟(삭제 등)은 null — 라벨 대신 "조회 불가"로 보여준다 */
+  contentType: SpotDetail['contentType'] | null
   status: SpotDetail['status']
   images: SpotDetail['images']
 }
@@ -84,14 +85,20 @@ onMounted(async () => {
   }
 })
 
-/** 목록·상세 응답에는 spotId만 있어 스팟 상세를 따로 읽는다 (최대 30건, 병렬) */
+/**
+ * 목록·상세 응답에는 spotId만 있어 스팟 상세를 따로 읽는다 (최대 30건, 병렬).
+ * 한 건이 실패해도(삭제된 스팟 등) 폼은 열려야 운영자가 그 스팟을 빼고 저장할 수 있다.
+ */
 async function buildDays(stops: RecommendedRouteStop[]): Promise<RouteSpot[][]> {
-  const details = await Promise.all(stops.map((s) => spotsApi.get(s.spotId)))
-  const byId = new Map(details.map((d) => [d.id, toRouteSpot(d)]))
+  const details = await Promise.all(stops.map((s) => spotsApi.get(s.spotId).catch(() => null)))
+  const byId = new Map(stops.map((s, i) => [s.spotId, details[i] ? toRouteSpot(details[i]) : unavailableSpot(s.spotId)]))
   const dayCount = Math.max(...stops.map((s) => s.day), 1)
   return Array.from({ length: dayCount }, (_, i) =>
     stops.filter((s) => s.day === i + 1).sort((a, b) => a.sequence - b.sequence).map((s) => byId.get(s.spotId)!),
   )
+}
+function unavailableSpot(id: number): RouteSpot {
+  return { id, title: `#${id} (조회 불가)`, area: null, district: null, contentType: null, status: 'DELETED', images: [] }
 }
 
 // ── 일차 ──
@@ -147,7 +154,7 @@ const searchColumns = [
   { key: 'title', label: '스팟' },
   { key: 'contentType', label: '유형', class: 'w-24' },
   { key: 'location', label: '지역', class: 'w-36' },
-  { key: 'action', label: '', class: 'w-20 text-right' },
+  { key: 'action', label: '', class: 'w-24 text-right whitespace-nowrap' },
 ]
 
 // ── 대표 이미지 ──
@@ -261,7 +268,7 @@ async function submit() {
               <span class="truncate text-sm font-medium">{{ spot.title }}</span>
               <Badge v-if="spot.status !== 'PUBLISHED'" :tone="spotStatusTone[spot.status]">{{ spotStatusLabel[spot.status] }}</Badge>
             </div>
-            <p class="text-xs text-gray-500">{{ spotContentTypeLabel[spot.contentType] }} · {{ [spot.area, spot.district].filter(Boolean).join(' ') || '-' }}</p>
+            <p class="text-xs text-gray-500">{{ spot.contentType ? spotContentTypeLabel[spot.contentType] : '-' }} · {{ [spot.area, spot.district].filter(Boolean).join(' ') || '-' }}</p>
           </div>
           <div class="flex shrink-0 items-center gap-1">
             <button type="button" class="rounded p-1.5 text-gray-500 hover:bg-gray-100 disabled:opacity-30" :disabled="si === 0" @click="moveSpot(di, si, -1)"><ChevronUp class="size-4" /></button>
