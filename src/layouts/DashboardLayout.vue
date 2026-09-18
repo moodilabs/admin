@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, Activity, KeyRound, LogOut,
+  LayoutDashboard, Users, MapPin, Route, Map, Images, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, Activity, KeyRound, LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import PasswordChangeModal from '@/components/PasswordChangeModal.vue'
@@ -15,6 +15,9 @@ const navItems = computed(() => [
   { name: 'dashboard', label: '대시보드', icon: LayoutDashboard },
   { name: 'members', label: '회원 관리', icon: Users },
   { name: 'spots', label: '스팟 관리', icon: MapPin },
+  { name: 'recommended-routes', label: '추천 루트', icon: Route },
+  { name: 'recommended-areas', label: '추천 지역', icon: Map },
+  { name: 'survey-images', label: '사전조사 이미지', icon: Images },
   { name: 'notices', label: '공지사항', icon: Megaphone },
   { name: 'faqs', label: 'FAQ', icon: CircleHelp },
   { name: 'policies', label: '약관 관리', icon: FileText },
@@ -77,7 +80,8 @@ async function handleLogout() {
       </div>
     </aside>
     <main class="min-w-0 flex-1 overflow-y-auto p-8">
-      <RouterView />
+      <!-- 등록/수정이 같은 컴포넌트를 쓰는 화면(약관·공지)은 경로가 바뀌어도 인스턴스가 재사용돼 onMounted 초기화가 안 돈다 → 경로별로 리마운트 -->
+      <RouterView :key="route.path" />
     </main>
 
     <!-- 초기 비밀번호 상태면 닫을 수 없는 변경 모달을 띄운다 — 서버도 그 전까진 다른 API를 403으로 막는다 -->
