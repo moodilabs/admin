@@ -51,8 +51,10 @@ export interface FaqRequest {
 }
 
 // ── 약관 (AdminPolicySummaryResponse / AdminPolicyDetailResponse) ──
-/** 백엔드 support.domain.PolicyType — 가입 필수 약관(AgreementType)과 1:1 */
-export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY'
+/** 백엔드 support.domain.PolicyType — 가입 약관(AgreementType)과 1:1. MARKETING은 선택 동의 문서 */
+export type PolicyType = 'TERMS_OF_SERVICE' | 'PRIVACY_POLICY' | 'MARKETING'
+/** 중복 기준은 (type, version, locale). 앱 기본은 en-US */
+export type PolicyLocale = 'ko-KR' | 'en-US'
 
 export interface PolicySummary {
   id: number
@@ -60,6 +62,11 @@ export interface PolicySummary {
   version: string
   /** YYYY-MM-DD */
   effectiveAt: string
+  locale: PolicyLocale
+  /** 시행 활성 — 꺼지면 시행일이 지나도 "현재 시행본"으로 잡히지 않는다 */
+  enabled: boolean
+  /** 앱 약관보기 노출 */
+  visible: boolean
 }
 
 export interface PolicyDetail extends PolicySummary {
@@ -71,6 +78,15 @@ export interface PolicyRequest {
   version: string
   content: string
   effectiveAt: string
+  locale: PolicyLocale
+  enabled: boolean
+  visible: boolean
+}
+
+/** PATCH /policies/{id}/publication — 시행된 버전도 바꿀 수 있는 유일한 필드 */
+export interface PolicyPublicationRequest {
+  enabled: boolean
+  visible: boolean
 }
 
 // ── 1:1 문의 (AdminInquirySummaryResponse / AdminInquiryDetailResponse) ──

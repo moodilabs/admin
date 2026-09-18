@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  LayoutDashboard, Users, MapPin, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, Activity, KeyRound, LogOut,
+  LayoutDashboard, Users, MapPin, Route, Map, Megaphone, CircleHelp, FileText, MessageSquare, ShieldCheck, ScrollText, Activity, KeyRound, LogOut,
 } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
 import PasswordChangeModal from '@/components/PasswordChangeModal.vue'
@@ -15,6 +15,8 @@ const navItems = computed(() => [
   { name: 'dashboard', label: '대시보드', icon: LayoutDashboard },
   { name: 'members', label: '회원 관리', icon: Users },
   { name: 'spots', label: '스팟 관리', icon: MapPin },
+  { name: 'recommended-routes', label: '추천 루트', icon: Route },
+  { name: 'recommended-areas', label: '추천 지역', icon: Map },
   { name: 'notices', label: '공지사항', icon: Megaphone },
   { name: 'faqs', label: 'FAQ', icon: CircleHelp },
   { name: 'policies', label: '약관 관리', icon: FileText },

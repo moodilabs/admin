@@ -1,5 +1,6 @@
 import type { MemberStatus, Provider } from '@/types/member'
-import type { InquiryStatus, InquiryTopic, NoticeType, PolicyType } from '@/types/support'
+import type { InquiryStatus, InquiryTopic, NoticeType, PolicyLocale, PolicyType } from '@/types/support'
+import type { AreaLevel } from '@/types/curation'
 import type { AdminRole } from '@/types/auth'
 import type { MoodTag, SpotContentType, SpotStatus } from '@/types/spot'
 
@@ -20,7 +21,12 @@ export const noticeTypeLabel: Record<NoticeType, string> = {
 export const policyTypeLabel: Record<PolicyType, string> = {
   TERMS_OF_SERVICE: '서비스 이용약관',
   PRIVACY_POLICY: '개인정보 처리방침',
+  MARKETING: '마케팅 정보 수신',
 }
+export const policyLocaleLabel: Record<PolicyLocale, string> = { 'ko-KR': '국문', 'en-US': '영문' }
+
+export const areaLevelLabel: Record<AreaLevel, string> = { REGION: '시/도', DISTRICT: '시/군/구', NEIGHBORHOOD: '동/면' }
+export const areaLevelTone: Record<AreaLevel, Tone> = { REGION: 'blue', DISTRICT: 'green', NEIGHBORHOOD: 'gray' }
 
 export const inquiryStatusLabel: Record<InquiryStatus, string> = { RECEIVED: '접수', ANSWERED: '답변완료' }
 
