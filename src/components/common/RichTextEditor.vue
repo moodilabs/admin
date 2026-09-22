@@ -3,11 +3,12 @@ import { onBeforeUnmount, watch } from 'vue'
 import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { Color, TextStyle } from '@tiptap/extension-text-style'
-import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Heading2, Heading3, RemoveFormatting } from 'lucide-vue-next'
+import Highlight from '@tiptap/extension-highlight'
+import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Heading2, Heading3, Highlighter, RemoveFormatting } from 'lucide-vue-next'
 
 /**
  * 약관 전문 편집기. HTML을 v-model로 주고받는다.
- * 허용 서식은 백엔드 jsoup 화이트리스트(p/br/strong/em/u/s/h1~h3/ul/ol/li/span[color]/a)와 맞춘다 —
+ * 허용 서식은 백엔드 jsoup 화이트리스트(p/br/strong/em/u/s/h1~h3/ul/ol/li/span[color]/mark[background-color]/a)와 맞춘다 —
  * 여기서 만들 수 없는 태그는 서버에서도 제거된다.
  */
 const props = withDefaults(defineProps<{ disabled?: boolean; minRows?: number }>(), { minRows: 24 })
@@ -26,7 +27,7 @@ function toEditorHtml(value: string): string {
 const editor = useEditor({
   content: toEditorHtml(model.value),
   editable: !props.disabled,
-  extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), TextStyle, Color],
+  extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), TextStyle, Color, Highlight.configure({ multicolor: true })],
   editorProps: {
     attributes: {
       class: 'prose prose-sm max-w-none min-h-[var(--min-h)] px-3 py-2 text-sm focus:outline-none',
@@ -57,6 +58,13 @@ const COLORS = ['#111827', '#dc2626', '#2563eb', '#16a34a', '#d97706', '#7c3aed'
 function setColor(color: string) {
   editor.value?.chain().focus().setColor(color).run()
 }
+
+/** 형광펜 — 같은 색을 다시 누르면 해제 */
+const HIGHLIGHTS = ['#fef08a', '#bbf7d0', '#bae6fd', '#fbcfe8']
+
+function toggleHighlight(color: string) {
+  editor.value?.chain().focus().toggleHighlight({ color }).run()
+}
 </script>
 
 <template>
@@ -85,6 +93,18 @@ function setColor(color: string) {
         :title="`글자색 ${color}`"
         @click="setColor(color)"
       />
+      <span class="mx-1 h-5 w-px bg-gray-200" />
+      <Highlighter class="h-4 w-4 text-gray-400" title="형광펜" />
+      <button
+        v-for="color in HIGHLIGHTS"
+        :key="color"
+        type="button"
+        class="h-5 w-5 rounded border border-gray-300"
+        :class="{ 'ring-2 ring-gray-900 ring-offset-1': editor.isActive('highlight', { color }) }"
+        :style="{ backgroundColor: color }"
+        :title="`형광펜 ${color}`"
+        @click="toggleHighlight(color)"
+      />
       <button type="button" class="tb" title="서식 지우기" @click="editor.chain().focus().unsetAllMarks().clearNodes().run()"><RemoveFormatting class="h-4 w-4" /></button>
     </div>
     <EditorContent :editor="editor" />
@@ -110,4 +130,5 @@ function setColor(color: string) {
 :deep(.ProseMirror h3) { font-size: 1rem; font-weight: 600; margin: 0.5rem 0 0.25rem; }
 :deep(.ProseMirror ul) { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; }
 :deep(.ProseMirror ol) { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+:deep(.ProseMirror mark) { padding: 0 0.1em; border-radius: 0.125rem; }
 </style>
