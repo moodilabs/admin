@@ -117,7 +117,6 @@ async function confirmDelete() {
     <template #actions="{ row }">
       <div class="flex justify-end" @click.stop>
         <BaseButton
-          v-if="!row.agreed"
           variant="danger"
           class="!px-3 !py-1"
           @click="deleteTarget = row"
