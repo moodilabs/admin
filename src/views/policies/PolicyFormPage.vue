@@ -13,7 +13,7 @@ import ConfirmDialog from '@/components/common/ConfirmDialog.vue'
 import BaseButton from '@/components/common/BaseButton.vue'
 import FormField from '@/components/common/FormField.vue'
 import TextInput from '@/components/common/TextInput.vue'
-import TextArea from '@/components/common/TextArea.vue'
+import RichTextEditor from '@/components/common/RichTextEditor.vue'
 import SelectField from '@/components/common/SelectField.vue'
 import Toggle from '@/components/common/Toggle.vue'
 
@@ -136,7 +136,7 @@ async function confirmDelete() {
         <Toggle v-model="form.visible" label="앱 약관보기에 공개" />
       </div>
       <FormField label="전문" required>
-        <TextArea v-model="form.content" required :rows="24" />
+        <RichTextEditor v-model="form.content" :min-rows="24" />
       </FormField>
       <div class="flex justify-end gap-2 pt-2">
         <BaseButton variant="secondary" @click="router.back()">취소</BaseButton>
