@@ -11,7 +11,7 @@ export const spotsApi = {
     const { data } = await client.get<ApiResponse<SpotDetail>>(`/spots/${spotId}`)
     return data.data
   },
-  /** SUPER 전용. HIDDEN·DELETED는 reason 필수 */
+  /** HIDDEN·DELETED는 reason 필수 */
   async updateStatus(spotId: number, status: SpotStatus, reason?: string) {
     await client.patch(`/spots/${spotId}/status`, { status, reason })
   },
