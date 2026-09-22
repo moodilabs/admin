@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import { spotsApi } from '@/api/spots.api'
-import { useAuthStore } from '@/stores/auth'
 import { getErrorMessage } from '@/utils/error'
 import { formatDateTime, formatNumber } from '@/utils/format'
 import { moodTagLabel, spotContentTypeLabel, spotStatusLabel, spotStatusTone } from '@/utils/labels'
@@ -19,7 +18,6 @@ import Toggle from '@/components/common/Toggle.vue'
 
 const route = useRoute()
 const router = useRouter()
-const auth = useAuthStore()
 const spotId = Number(route.params.spotId)
 
 const spot = ref<SpotDetail | null>(null)
@@ -43,7 +41,7 @@ const naverMapUrl = computed(() =>
     : null,
 )
 
-// ─ 노출 상태 (SUPER)
+// ─ 노출 상태
 type Action = 'hide' | 'publish' | 'delete'
 const action = ref<Action | null>(null)
 const reason = ref('')
@@ -151,7 +149,7 @@ async function saveDescription() {
     <PageHeader :title="spot.translation?.title ?? '(제목 없음)'">
       <template #actions>
         <Badge :tone="spotStatusTone[spot.status]">{{ spotStatusLabel[spot.status] }}</Badge>
-        <template v-if="auth.isSuper && spot.status !== 'DELETED'">
+        <template v-if="spot.status !== 'DELETED'">
           <BaseButton v-if="spot.status === 'HIDDEN'" variant="secondary" @click="openAction('publish')">노출 복구</BaseButton>
           <BaseButton v-else-if="spot.status === 'PUBLISHED'" variant="secondary" @click="openAction('hide')">숨김</BaseButton>
           <BaseButton variant="danger" @click="openAction('delete')">삭제</BaseButton>
