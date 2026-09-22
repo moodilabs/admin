@@ -22,13 +22,9 @@ const navItems = computed(() => [
   { name: 'faqs', label: 'FAQ', icon: CircleHelp },
   { name: 'policies', label: '약관 관리', icon: FileText },
   { name: 'inquiries', label: '1:1 문의', icon: MessageSquare },
-  ...(auth.isSuper
-    ? [
-        { name: 'accounts', label: '관리자 계정', icon: ShieldCheck },
-        { name: 'audit-logs', label: '감사 로그', icon: ScrollText },
-        { name: 'api-logs', label: 'API 로그', icon: Activity },
-      ]
-    : []),
+  { name: 'audit-logs', label: '감사 로그', icon: ScrollText },
+  { name: 'api-logs', label: 'API 로그', icon: Activity },
+  ...(auth.isSuper ? [{ name: 'accounts', label: '관리자 계정', icon: ShieldCheck }] : []),
 ])
 
 /** 대시보드(`/`)는 정확히 일치할 때만, 나머지는 하위 경로(상세·등록 등)까지 활성으로 본다. */

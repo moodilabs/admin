@@ -4,7 +4,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 import { ArrowLeft } from 'lucide-vue-next'
 import { membersApi } from '@/api/members.api'
-import { useAuthStore } from '@/stores/auth'
 import { getErrorMessage } from '@/utils/error'
 import { formatDateTime, formatNumber } from '@/utils/format'
 import { agreementTypeLabel, genderLabel, memberStatusLabel, memberStatusTone, policyLocaleLabel, providerLabel, withdrawalReasonLabel } from '@/utils/labels'
@@ -19,7 +18,6 @@ import TextArea from '@/components/common/TextArea.vue'
 
 const route = useRoute()
 const router = useRouter()
-const auth = useAuthStore()
 const memberId = String(route.params.memberId)
 
 const member = ref<MemberDetail | null>(null)
@@ -82,8 +80,8 @@ async function confirmAction() {
     <PageHeader :title="member.nickname ?? '(닉네임 없음)'">
       <template #actions>
         <Badge :tone="memberStatusTone[member.status]">{{ memberStatusLabel[member.status] }}</Badge>
-        <BaseButton v-if="auth.isSuper" variant="secondary" @click="router.push({ name: 'api-logs', query: { memberId } })">API 로그</BaseButton>
-        <template v-if="auth.isSuper && member.status !== 'WITHDRAWN'">
+        <BaseButton variant="secondary" @click="router.push({ name: 'api-logs', query: { memberId } })">API 로그</BaseButton>
+        <template v-if="member.status !== 'WITHDRAWN'">
           <BaseButton v-if="member.status === 'SUSPENDED'" variant="secondary" @click="openAction('unsuspend')">정지 해제</BaseButton>
           <BaseButton v-else variant="secondary" @click="openAction('suspend')">정지</BaseButton>
           <BaseButton variant="danger" @click="openAction('withdraw')">강제 탈퇴</BaseButton>

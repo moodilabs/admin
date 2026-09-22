@@ -15,7 +15,7 @@ export const policiesApi = {
     const { data } = await client.post<ApiResponse<{ id: number }>>('/policies', body)
     return data.data.id
   },
-  /** 동의한 회원이 없는(agreed=false) 버전만 수정 가능 — POLICY_ALREADY_AGREED 409 */
+  /** 시행·동의 여부와 무관하게 수정 가능 */
   async update(id: number, body: PolicyRequest) {
     await client.put(`/policies/${id}`, body)
   },
