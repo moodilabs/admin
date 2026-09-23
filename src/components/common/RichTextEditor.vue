@@ -4,11 +4,12 @@ import { EditorContent, useEditor } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import { Color, TextStyle } from '@tiptap/extension-text-style'
 import Highlight from '@tiptap/extension-highlight'
-import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Heading2, Heading3, Highlighter, RemoveFormatting } from 'lucide-vue-next'
+import { TableKit } from '@tiptap/extension-table'
+import { Bold, Italic, Underline, Strikethrough, List, ListOrdered, Heading2, Heading3, Highlighter, RemoveFormatting, Table, BetweenHorizontalEnd, BetweenVerticalEnd, Rows3, Columns3, Grid2x2X } from 'lucide-vue-next'
 
 /**
  * 약관 전문 편집기. HTML을 v-model로 주고받는다.
- * 허용 서식은 백엔드 jsoup 화이트리스트(p/br/strong/em/u/s/h1~h3/ul/ol/li/span[color]/mark[background-color]/a)와 맞춘다 —
+ * 허용 서식은 백엔드 jsoup 화이트리스트(p/br/strong/em/u/s/h1~h3/ul/ol/li/span[color]/mark[background-color]/a/table 계열)와 맞춘다 —
  * 여기서 만들 수 없는 태그는 서버에서도 제거된다.
  */
 const props = withDefaults(defineProps<{ disabled?: boolean; minRows?: number }>(), { minRows: 24 })
@@ -27,7 +28,7 @@ function toEditorHtml(value: string): string {
 const editor = useEditor({
   content: toEditorHtml(model.value),
   editable: !props.disabled,
-  extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), TextStyle, Color, Highlight.configure({ multicolor: true })],
+  extensions: [StarterKit.configure({ heading: { levels: [1, 2, 3] } }), TextStyle, Color, Highlight.configure({ multicolor: true }), TableKit.configure({ table: { resizable: false } })],
   editorProps: {
     attributes: {
       class: 'prose prose-sm max-w-none min-h-[var(--min-h)] px-3 py-2 text-sm focus:outline-none',
@@ -64,6 +65,12 @@ const HIGHLIGHTS = ['#fef08a', '#bbf7d0', '#bae6fd', '#fbcfe8']
 
 function toggleHighlight(color: string) {
   editor.value?.chain().focus().toggleHighlight({ color }).run()
+}
+
+const NEW_TABLE = { rows: 3, cols: 3, withHeaderRow: true }
+
+function insertTable() {
+  editor.value?.chain().focus().insertTable(NEW_TABLE).run()
 }
 </script>
 
@@ -105,6 +112,16 @@ function toggleHighlight(color: string) {
         :title="`형광펜 ${color}`"
         @click="toggleHighlight(color)"
       />
+      <span class="mx-1 h-5 w-px bg-gray-200" />
+      <button type="button" class="tb" title="표 삽입" @click="insertTable"><Table class="h-4 w-4" /></button>
+      <template v-if="editor.isActive('table')">
+        <button type="button" class="tb" title="아래에 행 추가" @click="editor.chain().focus().addRowAfter().run()"><BetweenHorizontalEnd class="h-4 w-4" /></button>
+        <button type="button" class="tb" title="오른쪽에 열 추가" @click="editor.chain().focus().addColumnAfter().run()"><BetweenVerticalEnd class="h-4 w-4" /></button>
+        <button type="button" class="tb" title="행 삭제" @click="editor.chain().focus().deleteRow().run()"><Rows3 class="h-4 w-4" /></button>
+        <button type="button" class="tb" title="열 삭제" @click="editor.chain().focus().deleteColumn().run()"><Columns3 class="h-4 w-4" /></button>
+        <button type="button" class="tb" title="표 삭제" @click="editor.chain().focus().deleteTable().run()"><Grid2x2X class="h-4 w-4" /></button>
+      </template>
+      <span class="mx-1 h-5 w-px bg-gray-200" />
       <button type="button" class="tb" title="서식 지우기" @click="editor.chain().focus().unsetAllMarks().clearNodes().run()"><RemoveFormatting class="h-4 w-4" /></button>
     </div>
     <EditorContent :editor="editor" />
@@ -131,4 +148,11 @@ function toggleHighlight(color: string) {
 :deep(.ProseMirror ul) { list-style: disc; padding-left: 1.25rem; margin-bottom: 0.5rem; }
 :deep(.ProseMirror ol) { list-style: decimal; padding-left: 1.25rem; margin-bottom: 0.5rem; }
 :deep(.ProseMirror mark) { padding: 0 0.1em; border-radius: 0.125rem; }
+:deep(.ProseMirror table) { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 0.5rem 0; }
+:deep(.ProseMirror th),
+:deep(.ProseMirror td) { border: 1px solid #d1d5db; padding: 0.25rem 0.5rem; vertical-align: top; }
+:deep(.ProseMirror th) { background: #f3f4f6; font-weight: 600; text-align: left; }
+:deep(.ProseMirror th p),
+:deep(.ProseMirror td p) { margin: 0; }
+:deep(.ProseMirror .selectedCell) { background: #e0e7ff; }
 </style>
